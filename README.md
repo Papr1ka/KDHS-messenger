@@ -2,8 +2,8 @@
 
 ## Requirements
 
-python >= 3.9.9 [install]("https://www.python.org/downloads/")
-poetry [install]("https://python-poetry.org/docs/#installation")
+python >= 3.9.9 [install](https://www.python.org/downloads/)
+poetry [install](https://python-poetry.org/docs/#installation)
 
 ## Installation
 
