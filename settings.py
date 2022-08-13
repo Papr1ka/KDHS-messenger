@@ -1,5 +1,9 @@
 from pathlib import Path
 from os import path
+from kivy.core.window import Window
+
+Window.minimum_height = 500
+Window.minimum_width = 400
 
 #path to project directory
 BASE_DIR = Path(__file__).resolve().parent
