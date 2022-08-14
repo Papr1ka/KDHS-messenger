@@ -1,7 +1,7 @@
 from pathlib import Path
 from os import path
 from kivy.core.window import Window
-
+# хуй
 Window.minimum_height = 500
 Window.minimum_width = 400
 
