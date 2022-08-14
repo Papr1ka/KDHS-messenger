@@ -1,20 +1,30 @@
 from kivymd.app import MDApp
 from kivy.lang.builder import Builder
+from kivy.utils import get_color_from_hex
+from kivy.properties import DictProperty
+from libs.server import Client
 
 from settings import Templates, BASE_DIR
 from libs.screen_manager.screen_manager import RootScreenManager
-
+from libs.colors import colors
 
 class KDHSMessengerApp(MDApp):
+    
+    colors = DictProperty({})
+    
+    def on_start(self):
+        self.client = Client()
+    
     def build(self):
+        self.theme_cls.colors.update(colors)
         self.__load_all_kv_files()
         self.__load_theme()
-        return RootScreenManager()
+        self.screen_manager = RootScreenManager()
+        return self.screen_manager
     
     def __load_theme(self):
-        self.theme_cls.primary_palette = "Gray"
-        self.theme_cls.primary_hue = "500"
-        self.theme_cls.accent_palette = "BlueGray"
+        
+        self.colors = {i: get_color_from_hex(colors[i]) for i in colors}
         self.theme_cls.theme_style = 'Dark'
     
     def __load_all_kv_files(self):

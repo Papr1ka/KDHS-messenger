@@ -1,5 +1,5 @@
 import requests
-from exceptions import CommonPasswordError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
+from libs.exceptions import CommonPasswordError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
 
 #URL = "http://127.0.0.1:8000/api/v1/"
 URL = "https://connection-net.herokuapp.com/api/v1/"
