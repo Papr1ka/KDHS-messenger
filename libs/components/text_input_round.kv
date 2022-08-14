@@ -1,0 +1,23 @@
+#:kivy 2.1.0
+
+<TextInputRound@FloatLayout>:
+    size_hint: 0.85, 0.07
+    pos_hint: {}
+    canvas:
+        Color:
+            rgba: self.back_color
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [8]
+    TextInput:
+        hint_text: root.hint_text
+        size_hint: 1, None
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        height: self.minimum_height
+        multiline: False
+        cursor_color: 0.46, 0.38, 0.86, 1
+        cursor_width: "2sp"
+        foreground_color: root.text_color
+        background_color: 0, 0, 0, 0
+        padding: 15
