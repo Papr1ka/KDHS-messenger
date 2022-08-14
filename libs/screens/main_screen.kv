@@ -1,0 +1,51 @@
+#:kivy 2.1.0
+
+<MainScreen>:
+    name: "main_screen"
+
+
+<MainBackground@MDFloatLayout>:
+    md_bg_color: app.colors['ThirdAccentColor']
+
+
+<Contact@MDFloatLayout>:
+    Label:
+        text: root.text
+
+
+<MainMobileView>:
+    MainBackground:
+        MDBoxLayout:
+            orientation: 'vertical'
+            MDFloatLayout:
+                size_hint_y: 0.10
+                MDIconButton:
+                    icon: "menu"
+                    pos_hint: {"x": 0.03, "center_y": 0.5}
+                TextInputRound:
+                    pos_hint: {"right": 0.95, "center_y": 0.5}
+                    size_hint: 0.8, 0.6
+                    back_color: app.colors["SecondColor"]
+                    text_color: app.colors["MainColor"]
+                    hint_text: "Search"
+                    
+            RecycleView:
+                size_hint_y: 0.9
+                data: root.data
+                viewclass: 'Contact'
+                do_scroll_x: False
+                do_scroll_y: True
+                scroll_wheel_distance: 50
+                smooth_scroll_end: 15
+                RecycleGridLayout:
+                    cols: 1
+                    size_hint_y: None
+                    height: self.minimum_height
+                    default_size_hint: 1, None
+                    default_height: dp(40)
+                    size_hint_x: 1
+
+<MainTabletView>:
+
+
+<MainDesktopView>:
