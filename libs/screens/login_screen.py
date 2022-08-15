@@ -49,7 +49,7 @@ class LoginBehavior():
         except AccessError:
             self.show_error('Invalid username or password')
         else:
-            print('Success!')
+            MDApp.get_running_app().screen_manager.switch_screen('main_screen')
 
 
 class LoginScreenBase(MDFloatLayout, LoginBehavior):
