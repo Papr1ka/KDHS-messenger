@@ -3,24 +3,31 @@ from kivy.lang.builder import Builder
 from kivy.utils import get_color_from_hex
 from kivy.properties import DictProperty
 from libs.server import Client
+from libs.user import User
 
 from settings import Templates, BASE_DIR
 from libs.screen_manager.screen_manager import RootScreenManager
 from libs.colors import colors
+from libs.data import Data
 
-class KDHSMessengerApp(MDApp):
+
+class KDHSMessengerApp(MDApp, Data):
     
     colors = DictProperty({})
     
-    def on_start(self):
+    def __init__(self, **kwargs):
         self.client = Client()
+        super().__init__(**kwargs)
     
     def build(self):
         self.theme_cls.colors.update(colors)
         self.__load_all_kv_files()
         self.__load_theme()
         self.screen_manager = RootScreenManager()
-        self.screen_manager.current = 'main_screen'
+        
+        #for development
+        #self.screen_manager.current = 'main_screen'
+        
         return self.screen_manager
     
     def __load_theme(self):

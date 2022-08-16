@@ -12,7 +12,7 @@
         RoundedRectangle:
             size: self.size
             pos: self.pos
-            radius: [8]
+            radius: root.radius
     TextInput:
         id: text_input
         hint_text: root.hint_text
@@ -20,11 +20,13 @@
         pos_hint: {"center_x": 0.5, "center_y": 0.5}
         height: self.minimum_height
         multiline: False
-        cursor_color: 0.46, 0.38, 0.86, 1
+        cursor_color: app.colors['MainColor']
         cursor_width: "2sp"
         foreground_color: root.text_color
         background_color: 0, 0, 0, 0
         padding: 15
+        font_size: root.font_size
+        hint_text_color: self.foreground_color
 
 <TextInputRoundIcon@FloatLayout>:
     textinput: text_input
@@ -36,7 +38,7 @@
         RoundedRectangle:
             size: self.size
             pos: self.pos
-            radius: [8]
+            radius: root.radius
     TextInput:
         id: text_input
         hint_text: root.hint_text
@@ -44,13 +46,37 @@
         pos_hint: {"center_x": 0.5, "center_y": 0.5}
         height: self.minimum_height
         multiline: False
-        cursor_color: 0.46, 0.38, 0.86, 1
+        cursor_color: app.colors['MainColor']
         cursor_width: "2sp"
         foreground_color: root.text_color
         background_color: 0, 0, 0, 0
         padding: 15, 15, 47, 15
+        font_size: root.font_size
     Image:
         source: root.icon_source
         size_hint: 0.5, 0.5
-        pos_hint: root.icon_pos
+        pos_hint: root.icon_pos_hint
         
+<TextInputString@MDBoxLayout>:
+    textinput: text_input
+    canvas:
+        Color:
+            rgba: app.colors['SecondColor']
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    TextInput:
+        id: text_input
+        hint_text: "Send message..."
+        pos_hint: {"center_y": 0.5}
+        multiline: False
+        cursor_color: app.colors['MainColor']
+        cursor_width: "2sp"
+        foreground_color: app.colors['MainColor']
+        background_color: 0, 0, 0, 0
+        padding: 15, 15, 47, 15
+        hint_text_color: app.colors['MainColor']
+    MDIconButton:
+        icon: "send-circle-outline"
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        icon_size: "32sp"

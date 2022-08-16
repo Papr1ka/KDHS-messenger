@@ -1,6 +1,8 @@
 from pathlib import Path
 from os import path
 from kivy.core.window import Window
+from kivymd.uix.controllers import WindowController
+
 
 Window.minimum_height = 500
 Window.minimum_width = 400
@@ -18,3 +20,25 @@ Templates = [
     SOURCE_DIR.joinpath('screens'),
     SOURCE_DIR.joinpath('screen_manager'),
 ]
+
+
+Widths = {
+    'mobile': 700,
+    'tablet': 1100,
+}
+
+
+def on_size(self, instance, size: list) -> None:
+    """Called when the application screen size changes."""
+
+    window_width = size[0]
+
+    if window_width < Widths['mobile']:
+        self.real_device_type = "mobile"
+    elif window_width < Widths['tablet']:
+        self.real_device_type = "tablet"
+    else:
+        self.real_device_type = "desktop"
+
+
+WindowController.on_size = on_size
