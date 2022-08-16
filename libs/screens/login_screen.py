@@ -22,16 +22,24 @@ class LoginDesktopView(MDScreen):
 
 class LoginBehavior():
 
-    client = None
+    _client = None
+    _app = None
 
     def show_error(self, message):
         self.ids.error.text = message
         self.ids.error.texture_update()
     
-    def get_client(self):
-        if not self.client:
-            self.client = MDApp.get_running_app().client
-        return self.client
+    @property
+    def app(self):
+        if not self._app:
+            self._app = MDApp.get_running_app()
+        return self._app
+    
+    @property
+    def client(self):
+        if not self._client:
+            self._client = self.app.client
+        return self._client
     
     @property
     def username(self):
@@ -45,11 +53,12 @@ class LoginBehavior():
         if not check_password_length(self.password):
             return self.show_error('Password must contain at least 8 characters')
         try:
-            self.get_client().autorize(self.username, self.password)
+            self.client.autorize(self.username, self.password)
         except AccessError:
             self.show_error('Invalid username or password')
         else:
-            MDApp.get_running_app().screen_manager.switch_screen('main_screen')
+            self.app.on_login()
+            self.app.screen_manager.switch_screen('main_screen')
 
 
 class LoginScreenBase(MDFloatLayout, LoginBehavior):

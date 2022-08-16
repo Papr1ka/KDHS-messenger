@@ -1,0 +1,18 @@
+#:kivy 2.1.0
+
+<ChatBubble>:
+    adaptive_height: True
+    padding: [dp(8), dp(8)]
+    text_color: app.colors["MainColor"]
+    text_size: self.width, None
+    size_hint_x: 0.8
+    markup: True
+    canvas.before:
+        Color:
+            rgba: app.colors["ThirdAccentColor"]
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius:
+                [dp(8), dp(8), (dp(-5), dp(5)), dp(8)] if self.send_by_user \
+                else [(dp(-5), dp(5)), dp(8), dp(8), dp(8)]
