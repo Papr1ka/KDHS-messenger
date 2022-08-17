@@ -59,6 +59,7 @@
         
 <TextInputString@MDBoxLayout>:
     textinput: text_input
+    button: button
     canvas:
         Color:
             rgba: app.colors['SecondColor']
@@ -76,7 +77,9 @@
         background_color: 0, 0, 0, 0
         padding: 15, 15, 47, 15
         hint_text_color: app.colors['MainColor']
+        text_validate_unfocus: False
     MDIconButton:
+        id: button
         icon: "send-circle-outline"
         pos_hint: {"center_x": 0.5, "center_y": 0.5}
         icon_size: "32sp"

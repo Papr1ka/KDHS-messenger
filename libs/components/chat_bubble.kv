@@ -6,13 +6,11 @@
     text_color: app.colors["MainColor"]
     text_size: self.width, None
     size_hint_x: 0.8
-    markup: True
+    halign: self.halign
     canvas.before:
         Color:
             rgba: app.colors["ThirdAccentColor"]
         RoundedRectangle:
             size: self.size
             pos: self.pos
-            radius:
-                [dp(8), dp(8), (dp(-5), dp(5)), dp(8)] if self.send_by_user \
-                else [(dp(-5), dp(5)), dp(8), dp(8), dp(8)]
+            radius: [dp(8), dp(8), (dp(-5), dp(5)), dp(8)] if self.send_by_user else [(dp(-5), dp(5)), dp(8), dp(8), dp(8)]

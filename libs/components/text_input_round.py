@@ -25,5 +25,7 @@ class TextInputRoundIcon(TextInputRound):
 
 class TextInputString(MDBoxLayout):
     textinput = ObjectProperty(None)
+    button = ObjectProperty(None)
+
     def get_text(self):
         return self.textinput.text

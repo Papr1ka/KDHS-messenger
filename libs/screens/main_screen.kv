@@ -3,50 +3,72 @@
 <MainScreen>:
     name: "main_screen"
 
-
 <MessagesScreen>:
     name: "messages_screen"
     MDBoxLayout:
         orientation: 'vertical'
         MDTopAppBar:
-            title: "Алибаба"
+            title: app.current_destination_username
             left_action_items: [["arrow-left", lambda x: app.screen_manager.switch_screen('main_screen')]]
             md_bg_color: app.colors['SecondColor']
             text_color: app.colors['MainColor']
-        ScrollView:
+        
+        RecycleView:
+            id: messages_rv
+            data: app.messages
             do_scroll_x: False
             do_scroll_y: True
-            MDBoxLayout:
-                orientation: 'vertical'
-                spacing: dp(16)
+            viewclass: "ChatBubble"
+
+            RecycleBoxLayout:
                 padding: dp(16)
-                ChatBubble:
-                    text: "[color=#FF0000]18:00 PM[/color] asdsadsaodas;djlaks;jdlkasjdkls"
+                spacing: dp(16)
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_size[1]
+                default_size_hint: .8, None
+                default_size: None, None
+
         MDFloatLayout:
             size_hint_y: None
             height: dp(48)
             TextInputString:
+                id: text_input
 
+
+<MessagesLayout>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: app.current_destination_username
+            left_action_items: [["arrow-left", lambda x: app.screen_manager.switch_screen('main_screen')]]
+            md_bg_color: app.colors['SecondColor']
+            text_color: app.colors['MainColor']
+        
+        RecycleView:
+            id: messages_rv
+            data: app.messages
+            do_scroll_x: False
+            do_scroll_y: True
+            viewclass: "ChatBubble"
+
+            RecycleBoxLayout:
+                padding: dp(16)
+                spacing: dp(16)
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_size[1]
+                default_size_hint: .8, None
+                default_size: None, None
+
+        MDFloatLayout:
+            size_hint_y: None
+            height: dp(48)
+            TextInputString:
+                id: text_input
 
 <MainBackground@MDFloatLayout>:
     md_bg_color: app.colors['ThirdAccentColor']
-
-
-<Contact@MDFloatLayout>:
-    label: label
-    FitImage:
-        radius: [16]
-        pos_hint: {'x': 0.075, 'center_y': 0.5}
-        source: root.icon_source
-        size_hint: None, None
-        size: root.label.texture_size[1] + 16, root.label.texture_size[1] + 16
-    MDLabel:
-        id: label
-        pos_hint: {'x': 0.2, 'center_y': 0.5}
-        size_hint_x: 0.8
-        text: root.text
-        halign: 'left'
-        font_size: 18
 
 
 <SidebarNavigation@MDNavigationDrawer>:
@@ -82,7 +104,7 @@
             text_color: app.colors['MainColor']
             font_size: 16
             selected_color: app.colors['MainColor']
-            on_press: app.screen_manager.switch_screen("login_screen")
+            on_press: root.sign_out()
 
 
 <Sidebar@SidebarNavigation>:
@@ -119,19 +141,20 @@
                                     
                             RecycleView:
                                 size_hint_y: 0.9
-                                data: root.data
-                                viewclass: 'Contact'
+                                data: root.contacts
+                                viewclass: 'ChatItem'
                                 do_scroll_x: False
                                 do_scroll_y: True
                                 scroll_wheel_distance: 50
                                 smooth_scroll_end: 15
-                                RecycleGridLayout:
-                                    cols: 1
+                                RecycleBoxLayout:
+                                    padding: dp(8)
+                                    spacing: dp(8)
+                                    orientation: "vertical"
                                     size_hint_y: None
-                                    height: self.minimum_height
+                                    height: self.minimum_size[1]
                                     default_size_hint: 1, None
-                                    default_height: dp(40)
-                                    size_hint_x: 1
+                                    default_size: None, None
 
 
             Sidebar:
@@ -168,20 +191,22 @@
                                         
                                 RecycleView:
                                     size_hint_y: 0.9
-                                    data: root.data
-                                    viewclass: 'Contact'
+                                    data: root.contacts
+                                    viewclass: 'ChatItem'
                                     do_scroll_x: False
                                     do_scroll_y: True
                                     scroll_wheel_distance: 50
                                     smooth_scroll_end: 15
-                                    RecycleGridLayout:
-                                        cols: 1
+                                    RecycleBoxLayout:
+                                        padding: dp(10)
+                                        spacing: dp(15)
+                                        orientation: "vertical"
                                         size_hint_y: None
-                                        height: self.minimum_height
+                                        height: self.minimum_size[1]
                                         default_size_hint: 1, None
-                                        default_height: dp(40)
-                                        size_hint_x: 1
-                        MessagesScreen:
+                                        default_size: None, None
+                        MessagesLayout:
+                            id: messages_screen
 
             Sidebar:
                 id: nav_drawer
@@ -218,21 +243,22 @@
                                         
                                 RecycleView:
                                     size_hint_y: 0.9
-                                    data: root.data
-                                    viewclass: 'Contact'
+                                    data: root.contacts
+                                    viewclass: 'ChatItem'
                                     do_scroll_x: False
                                     do_scroll_y: True
                                     scroll_wheel_distance: 50
                                     smooth_scroll_end: 15
-                                    RecycleGridLayout:
-                                        cols: 1
+                                    RecycleBoxLayout:
+                                        padding: dp(10)
+                                        spacing: dp(15)
+                                        orientation: "vertical"
                                         size_hint_y: None
-                                        height: self.minimum_height
+                                        height: self.minimum_size[1]
                                         default_size_hint: 1, None
-                                        default_height: dp(40)
-                                        size_hint_x: 1
-                        MessagesScreen:
-
+                                        default_size: None, None
+                        MessagesLayout:
+                            id: messages_screen
 
             Sidebar:
                 id: nav_drawer
