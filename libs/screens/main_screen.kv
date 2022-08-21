@@ -76,13 +76,35 @@
     md_bg_color: app.colors['AccentColor']
     MDNavigationDrawerMenu:
 
-        MDNavigationDrawerHeader:
-            source: root.icon_source
-            title: root.header_head
-            text: root.header_body
-            spacing: "8dp"
-            padding: dp(12), 0, 0, dp(24)
-            text_color: app.colors['MainColor']
+        # MDNavigationDrawerHeader:
+        #     source: root.icon_source
+        #     title: root.header_head
+        #     text: root.header_body
+        #     spacing: "8dp"
+        #     padding: dp(12), 0, 0, dp(24)
+        #     text_color: app.colors['MainColor']
+        MDFloatLayout:
+            size_hint_y: None
+            height: dp(60)
+            FitImage:
+                source: root.icon_source
+                size_hint: None, None
+                size: dp(50), dp(50)
+                radius: [dp(18),]
+                pos_hint: {'x': 0.05, 'center_y': 0.5}
+
+            MDLabel:
+                text: root.header_head
+                pos_hint: {'x': 0.3, 'center_y': 0.5}
+                font_size: 18
+                halign: 'left'
+                text_size: dp(200), None
+                width: dp(200)
+                shorten: True
+                shorten_from: 'right'
+
+        MDNavigationDrawerDivider:
+            padding: 0
 
         MDNavigationDrawerItem:
             icon: "account-cog"
@@ -141,7 +163,7 @@
                                     
                             RecycleView:
                                 size_hint_y: 0.9
-                                data: root.contacts
+                                data: app.contacts_viewset
                                 viewclass: 'ChatItem'
                                 do_scroll_x: False
                                 do_scroll_y: True
@@ -191,7 +213,7 @@
                                         
                                 RecycleView:
                                     size_hint_y: 0.9
-                                    data: root.contacts
+                                    data: app.contacts_viewset
                                     viewclass: 'ChatItem'
                                     do_scroll_x: False
                                     do_scroll_y: True
@@ -243,7 +265,7 @@
                                         
                                 RecycleView:
                                     size_hint_y: 0.9
-                                    data: root.contacts
+                                    data: app.contacts_viewset
                                     viewclass: 'ChatItem'
                                     do_scroll_x: False
                                     do_scroll_y: True

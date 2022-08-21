@@ -1,0 +1,12 @@
+#:kivy 2.1.0
+
+<ChatListItem>:
+    text: root.text
+    secondary_text: root.secondary_text
+    radius: [18]
+    ImageLeftWidget:
+        source: root.image
+        radius: [18]
+        size: dp(50), dp(50)
+    RightTime:
+        text: root.time

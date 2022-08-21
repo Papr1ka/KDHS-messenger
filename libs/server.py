@@ -1,8 +1,12 @@
 import requests
 from libs.exceptions import CommonPasswordError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
 
-#URL = "http://127.0.0.1:8000/api/v1/"
-URL = "https://connection-net.herokuapp.com/api/v1/"
+SERVER_URL = "http://127.0.0.1:8000"
+# SERVER_URL = "https://connection-net.herokuapp.com"
+
+
+URL = SERVER_URL + "/api/v1/"
+
 """
 Server Api
 
@@ -118,7 +122,13 @@ class Client():
     def getcontacts(self) -> dict:
         url = URL + 'chatList'
         r = requests.get(url=url, headers=self.headers)
-        return r.json()
+        if r.status_code == 200:
+            return r.json()
+        elif r.status_code == 204:
+            raise ServerError(f'Server exception 204: {r.text}')
+        elif r.status_code == 400:
+            raise ServerError(f'Server exception 400: {r.text}')
+        raise AccessError(r.text)
     
     
     def autorize(self, username: str, password: str) -> str:
@@ -143,7 +153,7 @@ class Client():
     
     @requiredAuthorization
     def getMe(self) -> dict:
-        url = URL + 'auth/users/me'
+        url = URL + 'user'
         r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
             return r.json()
@@ -167,6 +177,7 @@ class Client():
     
     @requiredAuthorization
     def getmessagelist(self, chat_id: str, part: str) -> dict:
+        print("request")
         if not isinstance(chat_id, str):
             raise ValueError("Expected chat_id:str")
         if not isinstance(part, str):

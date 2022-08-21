@@ -1,4 +1,5 @@
 from libs.chat import Chat
+from libs.message import Message
 from libs.user import User
 from libs.server import Client
 from kivymd.app import MDApp
@@ -10,7 +11,8 @@ class Data():
     client: Client
     app: MDApp
     self_user: User = None
-    contacts: list = []
+    contacts = ListProperty([])
+    contacts_viewset = ListProperty([])
     contacts_loaded: bool = False
     messages = ListProperty([])
     chats = {}
@@ -22,12 +24,14 @@ class Data():
         self.self_user = self.get_self_user()
         self.root.ids.main_screen.on_login()
         self.contacts = self.get_contacts()
+        print(self.contacts_viewset)
     
     def on_sign_out(self):
         print("on_sign_out")
         self.self_user = None
         self.contacts = []
         self.contacts_loaded = False
+        self.contacts_viewset = []
         self.selected_chat_id = ""
         self.current_destination_username = ""
         self.messages = []
@@ -45,9 +49,10 @@ class Data():
         if not self.contacts_loaded:
             data = self.client.getcontacts()['chats']['chats']
             for chat in data:
-                self.contacts.append(Chat().from_data(chat))
+                chat_obj = Chat()
+                self.contacts.append(chat_obj.from_data(chat))
+                self.contacts_viewset.append(chat_obj.to_view())
             self.contacts_loaded = True
-            print(len(self.contacts))
             return self.contacts
         return self.contacts
     
@@ -63,8 +68,13 @@ class Data():
     def find_contact_by_chat_id(self, chat_id):
         for i in self.contacts:
             if str(i.id) == chat_id:
-                return i  
-            
+                return i
+
+    def find_contact_view_by_chat_id(self, chat_id):
+        for i in self.contacts_viewset:
+            if i['id'] == chat_id:
+                return i
+    
     def on_chat_switch(self, chat_id: str):
         print("on_chat_switch")
         self.selected_chat_id = chat_id
@@ -89,5 +99,14 @@ class Data():
     
     def send_message(self, message: str):
         if self.selected_chat_id != '':
-            self.client.sendmessage(self.selected_chat_id, message)
+            data = self.client.sendmessage(self.selected_chat_id, message)
+            msg = Message().from_data(data)
             self.add_message({'text': message}, from_me=True)
+            self.change_chat_last_message(msg, self.selected_chat_id)
+    
+    def change_chat_last_message(self, message: Message, chat_id):
+        contact = self.find_contact_by_chat_id(chat_id)
+        if contact:
+            contact.last_message = message
+            self.contacts_viewset.remove(self.find_contact_view_by_chat_id(chat_id))
+            self.contacts_viewset.insert(0, contact.to_view())

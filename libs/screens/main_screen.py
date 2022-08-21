@@ -15,6 +15,8 @@ from libs.components.text_input_round import TextInputRound, TextInputString
 from libs.components.chat_bubble import ChatBubble
 from libs.components.listitem import ChatListItem
 from kivy.clock import Clock
+from kivy.uix.recycleview import RecycleView
+from kivymd.uix.list import TwoLineAvatarIconListItem
 
 
 class ChatItem(ChatListItem):
@@ -45,24 +47,10 @@ class MainContactEventBehavior():
     
     def on_login(self):
         self.ids.nav_drawer.header_head = self.app.get_self_user().username
-        user_data = {
-            "text": "Thomas Brewer",
-            "secondary_text": "Hey kivy is really awesome!",
-            "time": "9:02",
-            "image": "assets/icons/user.png",
-            "unread_messages": True,
-            "on_release": lambda x: print(),
-        }
-        #{'text': i.destination_username, 'icon_source': "assets/icons/user.png"}
-        self.contacts = [{'text': i.destination_username,
-                          'image': "assets/icons/user.png",
-                          'unread_messages': True,
-                          'secondary_text': '' if not i.last_message else i.last_message.text,
-                          'time': '18:00',
-                          'chat_id': str(i.id)} for i in self.app.get_contacts()]
+        self.ids.nav_drawer.icon_source = self.app.get_self_user().avatar_url
     
     def on_sign_out(self):
-        self.contacts = []
+        pass
 
 
 class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
