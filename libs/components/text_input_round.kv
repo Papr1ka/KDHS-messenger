@@ -1,5 +1,5 @@
 #:kivy 2.1.0
-
+#:set font "Nunito"
 <TextInputBase>:
 
 <TextInputRound@FloatLayout>:
@@ -14,6 +14,7 @@
             pos: self.pos
             radius: root.radius
     TextInput:
+        font_name: font
         id: text_input
         hint_text: root.hint_text
         size_hint: 1, None
@@ -40,6 +41,7 @@
             pos: self.pos
             radius: root.radius
     TextInput:
+        font_name: font
         id: text_input
         hint_text: root.hint_text
         size_hint: 1, None

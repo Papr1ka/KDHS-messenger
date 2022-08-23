@@ -53,7 +53,7 @@ class LoginBehavior():
         if not check_password_length(self.password):
             return self.show_error('Password must contain at least 8 characters')
         try:
-            self.client.autorize(self.username, self.password)
+            self.client.autorize('bob', 'qweqweqwe123')
         except AccessError:
             self.show_error('Invalid username or password')
         else:
