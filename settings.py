@@ -8,8 +8,7 @@ from kivy.core.text import LabelBase
 Window.minimum_height = 500
 Window.minimum_width = 400
 
-LabelBase.register(name='Nunito', 
-                   fn_regular='assets/fonts/Nunito.ttf')
+LabelBase.register(name='Nunito', fn_regular='assets/fonts/Nunito.ttf')
 
 #path to project directory
 BASE_DIR = Path(__file__).resolve().parent
