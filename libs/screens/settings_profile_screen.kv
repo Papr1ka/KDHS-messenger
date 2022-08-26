@@ -1,0 +1,82 @@
+#:kivy 2.1.0
+
+
+<ProfileCard@MDCard>:
+    size_hint: None, None
+    height: "200dp"
+
+    MDRelativeLayout:
+        size_hint: None, None
+        size: root.size
+
+        MDFlatButton:
+            id: avatar
+            size_hint: None, None
+            size: dp(140), dp(140)
+            pos: 60, root.height - self.height - 10
+            radius: [dp(18),]
+            FitImage:
+                source: root.avatar_url
+                size_hint: None, None
+                size: self.parent.size
+                radius: [dp(18),]
+                pos: self.parent.pos
+
+        MDLabel:
+            id: label
+            text: root.username
+            adaptive_size: True
+            color: 1, 1, 1, 0.8
+            halign: 'left'
+            font_size: 24
+            pos: 60, 10
+            text_size: root.width - 120, None
+            shorten: True
+            shorten_from: 'right'
+
+        MDLabel:
+            id: label2
+            text: 'Создан:\n' + root.date_created
+            adaptive_size: True
+            color: 1, 1, 1, 0.8
+            halign: 'center'
+            font_size: 18
+            pos_hint: {'center_x': 0.75, 'top': 0.8}
+
+
+
+<SettingsProfileScreen>:
+    name: 'settings_profile_screen'
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: app.current_destination_username
+            left_action_items: [["arrow-left", lambda x: app.screen_manager.switch_screen('settings_screen')]]
+            md_bg_color: app.colors['SecondColor']
+            text_color: app.colors['MainColor']
+        MDCard:
+            profile_card: profile_card
+            size_hint: None, None
+            width: min(root.width, dp(500))
+            height: dp(self.profile_card.height + 110)
+            pos_hint: {'center_x': 0.5}
+            orientation: 'vertical'
+            ProfileCard:
+                id: profile_card
+                pos_hint: {'center_x': 0.5}
+                width: min(root.width, dp(500))
+                avatar_url: root.avatar_url
+                username: root.username
+                date_created: root.date_created
+            Widget:
+                size_hint_y: None
+                height: dp(40)
+            MDCard:
+                size_hint_y: None
+                height: sum([i.height for i in self.children])
+                SettingsItem:
+                    id: username_item
+                    text: 'Имя'
+                    secondary_text: root.username
+        Widget:
+            id: asscloser

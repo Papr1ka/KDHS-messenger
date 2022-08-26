@@ -1,0 +1,39 @@
+#:kivy 2.1.0
+
+
+<SnackLabel@MDLabel>:
+    size_hint_y: None
+    height: self.texture_size[1]
+    font_size: "15sp"
+    theme_text_color: 'Custom'
+    text_color: 'ffffff'
+    shorten: True
+    shorten_from: 'right'
+    pos_hint: {'center_y': 0.5}
+
+
+<SnackIcon@MDIconButton>:
+    pos_hint: {'center_y': 0.5}
+    opposite_colors: True
+
+
+<ExtendedBaseSnackbar@BaseSnackbar>:
+    snackbar_x: Window.width / 2 - dp(150)
+    snackbar_y: dp(10)
+    size_hint: None, None
+    size: (dp(300), dp(60))
+
+
+<ErrorSnackbar@ExtendedBaseSnackbar>:
+    md_bg_color: app.colors['ErrorColor']
+    SnackIcon:
+        icon: 'alert-circle-outline'
+    SnackLabel:
+        text: root.text
+
+<SuccessSnackbar@ExtendedSnackbar>:
+    md_bg_color: app.colors['SuccessColor']
+    SnackIcon:
+        icon: 'checkbox-marked-circle-outline'
+    SnackLabel:
+        text: root.text

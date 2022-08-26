@@ -10,13 +10,12 @@ from kivymd.uix.navigationdrawer import MDNavigationDrawer
 from kivymd.uix.label import MDLabel
 from kivy.uix.relativelayout import RelativeLayout
 from kivymd.uix.widget import MDAdaptiveWidget
+from kivy.clock import Clock
 
 from libs.components.text_input_round import TextInputRound, TextInputString
 from libs.components.chat_bubble import ChatBubble
 from libs.components.listitem import ChatListItem
-from kivy.clock import Clock
-from kivy.uix.recycleview import RecycleView
-from kivymd.uix.list import TwoLineAvatarIconListItem
+from libs.utils.behaviors import GetApp
 
 
 class ChatItem(ChatListItem):
@@ -33,17 +32,10 @@ class ContentNavigationDrawer(MDBoxLayout):
     pass
 
 
-class MainContactEventBehavior():
+class MainContactEventBehavior(GetApp):
     
     #data = ListProperty([{'text': "Алибаба", 'icon_source': "assets/icons/user.png"}])
     contacts = ListProperty([])
-    _app = None
-    
-    @property
-    def app(self):
-        if not self._app:
-            self._app = MDApp.get_running_app()
-        return self._app
     
     def on_login(self):
         self.ids.nav_drawer.header_head = self.app.get_self_user().username
@@ -78,15 +70,8 @@ class MainDesktopView(MDScreen, MainContactEventBehavior):
         super().on_enter()
 
 
-class MessagesBehavior():
+class MessagesBehavior(GetApp):
     messages: list = []
-    _app = None
-    
-    @property
-    def app(self):
-        if not self._app:
-            self._app = MDApp.get_running_app()
-        return self._app
     
     def send_from_button(self, button):
         self.send_message(button.parent.textinput)

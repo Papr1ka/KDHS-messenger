@@ -6,6 +6,7 @@ colors = {
     "UpLineColor" : "#7b6980",
     "ThirdAccentColor": "#7A687E",
     "ErrorColor": "#FF0000",
+    "SuccessColor": "#00FF00",
     "MassageScreenColor": "#433945", #433945
     "SearchColor" : "#5e5061",
 }

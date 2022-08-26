@@ -1,0 +1,101 @@
+#:kivy 2.1.0
+#:import SettingsToolbar libs.screens.settings_screen.SettingsToolbar
+
+<SettingsScreen>:
+    name: 'settings_screen'
+    Button:
+        text: 'работает'
+
+
+<SettingsScreenBase@MDRelativeLayout>:
+    MDSliverAppbar:
+        max_height: '160dp'
+        title: 'Settings'
+        pin_top: True
+        background_color: app.colors['SecondAccentColor']
+        toolbar_cls: SettingsToolbar()
+        radius: [20]
+        MDSliverAppbarHeader:
+            MDScreen:
+                md_bg_color: app.colors['SecondAccentColor']
+                MDBoxLayout:
+                    adaptive_height: True
+                    orientation: "vertical"
+                    pos_hint: {'center_x': 0.5,'center_y': 0.5}
+                    spacing: "20dp"
+                    MDBoxLayout:
+                        size_hint: None, None
+                        size: '85dp', '85dp'
+                        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                        FitImage:
+                            id: avatar_image
+                            source: "assets/icons/user.png"
+                            allow_stretch: True
+                            keep_ratio: False
+                            radius: [18]
+                    MDLabel:
+                        id: username_header
+                        text: 'example@email.com'
+                        halign: "center"
+                        adaptive_height: True
+        MDSliverAppbarContent:
+            id: content
+            size_hint_y: None
+            height: self.minimum_height
+            orientation: "vertical"
+            MDCard:
+                size_hint_y: None
+                height: "150dp"
+                orientation: "vertical"
+                OneLineIconListItem:
+                    id: username
+                    text: "Изменить профиль"
+                    divider: None
+                    on_press: app.screen_manager.switch_screen('settings_profile_screen')
+                    IconLeftWidget:
+                        icon: "account-circle-outline"
+                        icon_size: "32sp"
+                        ripple_scale: 0
+                OneLineIconListItem:
+                    text: "Настройки чатов"
+                    divider: None
+                    IconLeftWidget:
+                        icon: "chat-outline"
+                        icon_size: "32sp"
+                        ripple_scale: 0
+                OneLineIconListItem:
+                    text: "Память"
+                    divider: None
+                    IconLeftWidget:
+                        icon: "folder-download-outline"
+                        icon_size: "32sp"
+                        ripple_scale: 0
+            Widget:
+                size_hint_y: None
+                height: "10dp"
+            MDCard:
+                size_hint_y: None
+                height: "50dp"
+                orientation: "vertical"
+                OneLineIconListItem:
+                    id: username
+                    text: "Справка"
+                    divider: None
+                    on_press: root.parent.show_username_change_dialog()
+                    IconLeftWidget:
+                        icon: "information-outline"
+                        icon_size: "32sp"
+                        ripple_scale: 0
+
+<SettingsMobileView>:
+    SettingsScreenBase:
+        id: base
+
+<SettingsTabletView>:
+    SettingsScreenBase:
+        id: base
+
+<SettingsDesktopView>:
+    SettingsScreenBase:
+        id: base
+

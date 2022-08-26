@@ -1,0 +1,12 @@
+#:kivy 2.1.0
+
+<TextFieldPopup>:
+    textinput: textinput
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "50dp"
+
+    MDTextField:
+        id: textinput
+        hint_text: root.hint_text
