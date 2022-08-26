@@ -1,0 +1,14 @@
+#:kivy 2.1.0
+
+<SettingsItem>:
+    text: root.text
+    divider: None
+    textinput: textinput
+
+    RightTextInput:
+        id: textinput
+        text: root.secondary_text
+        shorten: True
+        shorten_from: 'right'
+        on_press: self.show_username_change_dialog()
+        pos_hint: {'center_y': 0.5}

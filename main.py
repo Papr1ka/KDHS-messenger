@@ -24,10 +24,7 @@ class KDHSMessengerApp(MDApp, Data):
         self.__load_all_kv_files()
         self.__load_theme()
         self.screen_manager = RootScreenManager()
-        
-        #for development
-        #self.screen_manager.current = 'main_screen'
-        
+
         return self.screen_manager
     
     def __load_theme(self):

@@ -1,8 +1,10 @@
 import requests
 from libs.exceptions import CommonPasswordError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
+from pathlib import Path
+from io import BytesIO
 
 SERVER_URL = "http://127.0.0.1:8000"
-# SERVER_URL = "https://connection-net.herokuapp.com"
+#SERVER_URL = "https://connection-net.herokuapp.com"
 
 
 URL = SERVER_URL + "/api/v1/"
@@ -162,6 +164,41 @@ class Client():
         elif r.status_code == 400:
             raise ServerError(f'Server exception 400: {r.text}')
         raise AccessError(r.text)
+    
+    @requiredAuthorization
+    def change_username(self, username: str):
+        if not isinstance(username, str):
+            raise ValueError("Expected username:str")
+        url = URL + 'user'
+        data = {
+            'username': username
+        }
+        r = requests.put(url=url, headers=self.headers, data=data)
+        if r.status_code == 200:
+            result = r.json()
+            error = result.get("error", None)
+            if error:
+                raise ValueError(error)
+            return result
+        raise AccessError(r.text)
+
+    @requiredAuthorization
+    def change_avatar(self, path_to_avatar):
+        headers = {'Content-Type': 'multipart/form-data'}
+        headers.update(self.headers)
+        filename = Path(path_to_avatar).name
+        url = URL + 'user'
+        data = {
+            'avatar': (filename, open(path_to_avatar, 'rb').read(), 'image/jpeg'),
+        }
+        r = requests.put(url=url, headers=self.headers, files=data)
+        if r.status_code == 200:
+            result = r.json()
+            error = result.get("error", None)
+            if error:
+                raise ValueError(error)
+            return result
+        raise AccessError(r.text)
 
     @requiredAuthorization
     def getuserlist(self) -> dict:
@@ -196,7 +233,7 @@ class Client():
             error = result.get("error", None)
             if error:
                 raise ValueError(error)
-            return r.json()
+            return result
         raise AccessError(r.text)
 
     @requiredAuthorization
@@ -216,7 +253,7 @@ class Client():
             error = result.get("error", None)
             if error:
                 raise ValueError(error)
-            return r.json()
+            return result
         raise AccessError(r.text)
 
     @requiredAuthorization
@@ -236,7 +273,7 @@ class Client():
             error = result.get("error", None)
             if error:
                 raise ValueError(error)
-            return r.json()
+            return result
         raise AccessError(r.text)
     
     def register(self, username: str, password: str) -> str:

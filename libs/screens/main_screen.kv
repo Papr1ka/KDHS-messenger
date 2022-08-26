@@ -74,18 +74,18 @@
 <SidebarNavigation@MDNavigationDrawer>:
     type: "modal"
     md_bg_color: app.colors['AccentColor']
+    padding: 0, 0, 0, 0
+    radius: 0
     MDNavigationDrawerMenu:
 
-        # MDNavigationDrawerHeader:
-        #     source: root.icon_source
-        #     title: root.header_head
-        #     text: root.header_body
-        #     spacing: "8dp"
-        #     padding: dp(12), 0, 0, dp(24)
-        #     text_color: app.colors['MainColor']
         MDFloatLayout:
             size_hint_y: None
             height: dp(60)
+            FitImage:
+                source: root.icon_source if root.icon_source != 'assets/icons/user.png' else ''
+                size_hint: None, None
+                size: self.parent.width, self.parent.parent.height
+                pos_hint: {'bottom': 1, 'center_x': 0.5}
             FitImage:
                 source: root.icon_source
                 size_hint: None, None
@@ -119,6 +119,7 @@
             text_color: app.colors['MainColor']
             font_size: 16
             selected_color: app.colors['MainColor']
+            on_press: app.screen_manager.switch_screen('settings_screen')
 
         MDNavigationDrawerItem:
             icon: "account-arrow-left"
@@ -170,8 +171,6 @@
                                 scroll_wheel_distance: 50
                                 smooth_scroll_end: 15
                                 RecycleBoxLayout:
-                                    padding: dp(8)
-                                    spacing: dp(8)
                                     orientation: "vertical"
                                     size_hint_y: None
                                     height: self.minimum_size[1]
@@ -220,8 +219,6 @@
                                     scroll_wheel_distance: 50
                                     smooth_scroll_end: 15
                                     RecycleBoxLayout:
-                                        padding: dp(10)
-                                        spacing: dp(15)
                                         orientation: "vertical"
                                         size_hint_y: None
                                         height: self.minimum_size[1]
@@ -272,8 +269,6 @@
                                     scroll_wheel_distance: 50
                                     smooth_scroll_end: 15
                                     RecycleBoxLayout:
-                                        padding: dp(10)
-                                        spacing: dp(15)
                                         orientation: "vertical"
                                         size_hint_y: None
                                         height: self.minimum_size[1]

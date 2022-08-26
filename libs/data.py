@@ -23,6 +23,8 @@ class Data():
         print("on_login")
         self.self_user = self.get_self_user()
         self.root.ids.main_screen.on_login()
+        self.root.ids.settings_screen.on_login()
+        self.root.ids.settings_profile_screen.on_login()
         self.contacts = self.get_contacts()
         print(self.contacts_viewset)
     
@@ -110,3 +112,18 @@ class Data():
             contact.last_message = message
             self.contacts_viewset.remove(self.find_contact_view_by_chat_id(chat_id))
             self.contacts_viewset.insert(0, contact.to_view())
+
+    def change_username(self, username):
+        self.client.change_username(username)
+        self.self_user = None
+        self.self_user = self.get_self_user()
+        self.root.ids.main_screen.on_login()
+        self.root.ids.settings_screen.on_login()
+
+    def change_avatar(self, path_to_image):
+        self.client.change_avatar(path_to_image)
+        self.self_user = None
+        self.self_user = self.get_self_user()
+        self.root.ids.main_screen.on_login()
+        self.root.ids.settings_screen.on_login()
+        self.root.ids.settings_profile_screen.on_login()

@@ -8,6 +8,7 @@ from kivymd.uix.behaviors.hover_behavior import HoverBehavior
 from kivymd.uix.label import MDLabel
 from kivymd.uix.list import TwoLineAvatarIconListItem, IRightBody
 from kivymd.app import MDApp
+from kivy.clock import Clock
 
 
 class ChatListItem(TwoLineAvatarIconListItem, HoverBehavior):

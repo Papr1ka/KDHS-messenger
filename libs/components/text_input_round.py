@@ -15,6 +15,7 @@ class TextInputBase():
 
 class TextInputRound(MDFloatLayout, TextInputBase):
     textinput = ObjectProperty(None)
+
     def get_text(self):
         return self.textinput.text
 

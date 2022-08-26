@@ -5,5 +5,5 @@ colors = {
     "SecondAccentColor": "#90AFD1",
     "ThirdAccentColor": "#7A687E",
     "ErrorColor": "#FF0000",
+    "SuccessColor": "#00FF00"
 }
-
