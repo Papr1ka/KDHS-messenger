@@ -1,4 +1,5 @@
 #:kivy 2.1.0
+#:set font "Nunito"
 
 <MainScreen>:
     name: "main_screen"
@@ -10,7 +11,7 @@
         MDTopAppBar:
             title: app.current_destination_username
             left_action_items: [["arrow-left", lambda x: app.screen_manager.switch_screen('main_screen')]]
-            md_bg_color: app.colors['SecondColor']
+            md_bg_color: app.colors['UpLineColor']
             text_color: app.colors['MainColor']
         
         RecycleView:
@@ -19,6 +20,12 @@
             do_scroll_x: False
             do_scroll_y: True
             viewclass: "ChatBubble"
+            canvas.before:
+                Color:
+                    rgba: app.colors["MassageScreenColor"]
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
 
             RecycleBoxLayout:
                 padding: dp(16)
@@ -41,8 +48,8 @@
         orientation: 'vertical'
         MDTopAppBar:
             title: app.current_destination_username
-            left_action_items: [["arrow-left", lambda x: app.screen_manager.switch_screen('main_screen')]]
-            md_bg_color: app.colors['SecondColor']
+            
+            md_bg_color: app.colors['UpLineColor']
             text_color: app.colors['MainColor']
         
         RecycleView:
@@ -51,6 +58,12 @@
             do_scroll_x: False
             do_scroll_y: True
             viewclass: "ChatBubble"
+            canvas.before:
+                Color:
+                    rgba: app.colors["MassageScreenColor"]
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
 
             RecycleBoxLayout:
                 padding: dp(16)
@@ -158,7 +171,7 @@
                                 TextInputRound:
                                     pos_hint: {"right": 0.95, "center_y": 0.5}
                                     size_hint: 0.8, 0.6
-                                    back_color: app.colors["SecondColor"]
+                                    back_color: app.colors["SearchColor"]
                                     text_color: app.colors["MainColor"]
                                     hint_text: "Search"
                                     
@@ -206,7 +219,7 @@
                                     TextInputRound:
                                         pos_hint: {"right": 0.95, "center_y": 0.5}
                                         size_hint: 0.75, 0.6
-                                        back_color: app.colors["SecondColor"]
+                                        back_color: app.colors["SearchColor"]
                                         text_color: app.colors["MainColor"]
                                         hint_text: "Search"
                                         
@@ -256,7 +269,7 @@
                                     TextInputRound:
                                         pos_hint: {"right": 0.95, "center_y": 0.5}
                                         size_hint: 0.75, 0.6
-                                        back_color: app.colors["SecondColor"]
+                                        back_color: app.colors["SearchColor"]
                                         text_color: app.colors["MainColor"]
                                         hint_text: "Search"
                                         
