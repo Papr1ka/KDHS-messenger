@@ -1,7 +1,6 @@
 import requests
 from libs.exceptions import CommonPasswordError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
 from pathlib import Path
-from io import BytesIO
 
 SERVER_URL = "http://127.0.0.1:8000"
 #SERVER_URL = "https://connection-net.herokuapp.com"
