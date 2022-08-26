@@ -1,4 +1,3 @@
-from tkinter import Widget
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.responsivelayout import MDResponsiveLayout
 from kivymd.uix.boxlayout import MDBoxLayout
