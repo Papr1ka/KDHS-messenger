@@ -36,19 +36,11 @@ class MainContactEventBehavior(GetApp):
     
     #data = ListProperty([{'text': "Алибаба", 'icon_source': "assets/icons/user.png"}])
     contacts = ListProperty([])
-    
-    def on_login(self):
-        self.ids.nav_drawer.header_head = self.app.get_self_user().username
-        self.ids.nav_drawer.icon_source = self.app.get_self_user().avatar_url
-    
-    def on_sign_out(self):
-        pass
 
 
 class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
     back_color = ColorProperty((0, 0, 0, 1))
     header_head = StringProperty("")
-    header_body = StringProperty("")
     icon_source = StringProperty("")
     
     def sign_out(self):
@@ -101,9 +93,7 @@ class MessagesLayout(RelativeLayout, MDAdaptiveWidget, MessagesBehavior):
     pass
 
 class MessagesScreen(MDScreen, MessagesBehavior):
-    
-    def on_enter(self):
-        print(self.ids)
+    pass
 
 
 class MainScreen(MDResponsiveLayout, MDScreen):
@@ -112,13 +102,3 @@ class MainScreen(MDResponsiveLayout, MDScreen):
         self.mobile_view = MainMobileView()
         self.tablet_view = MainTabletView()
         self.desktop_view = MainDesktopView()
-    
-    def on_login(self):
-        self.mobile_view.on_login()
-        self.tablet_view.on_login()
-        self.desktop_view.on_login()
-    
-    def on_sign_out(self):
-        self.mobile_view.on_sign_out()
-        self.tablet_view.on_sign_out()
-        self.desktop_view.on_sign_out()

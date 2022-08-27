@@ -3,7 +3,7 @@ from libs.message import Message
 from libs.user import User
 from libs.server import Client
 from kivymd.app import MDApp
-from kivy.properties import ObjectProperty, ListProperty, StringProperty
+from kivy.properties import ObjectProperty, ListProperty, StringProperty, NumericProperty
 from libs.utils.window import get_window_type
 
 class Data():
@@ -18,24 +18,30 @@ class Data():
     chats = {}
     selected_chat_id = StringProperty("")
     current_destination_username = StringProperty("")
+    current_destination_avatar_url = StringProperty("assets/icons/user.png")
+    current_username = StringProperty("")
+    current_avatar_url = StringProperty("assets/icons/user.png")
+    current_date_created = StringProperty("Now")
 
     def on_login(self):
         print("on_login")
         self.self_user = self.get_self_user()
-        self.root.ids.main_screen.on_login()
-        self.root.ids.settings_screen.on_login()
-        self.root.ids.settings_profile_screen.on_login()
+        self.current_username = self.self_user.username
+        self.current_avatar_url = self.self_user.avatar_url
+        self.current_date_created = self.self_user.date_created.strftime("%d:%m:%Y")
         self.contacts = self.get_contacts()
-        print(self.contacts_viewset)
-    
+
     def on_sign_out(self):
         print("on_sign_out")
-        self.self_user = None
+        self.self_user = User()
         self.contacts = []
         self.contacts_loaded = False
         self.contacts_viewset = []
         self.selected_chat_id = ""
         self.current_destination_username = ""
+        self.current_destination_avatar_url = "assets/icons/user.png"
+        self.current_username = ""
+        self.current_avatar_url = "assets/icons/user.png"
         self.messages = []
         self.chats = {}
         self.root.ids.main_screen.on_sign_out()
@@ -93,6 +99,7 @@ class Data():
         self.story_message(data)
     
     def story_message(self, data: dict):
+        print(self.chats)
         if self.selected_chat_id != '':
             story_exists = self.chats.get(self.selected_chat_id, None)
             if not story_exists:
@@ -115,15 +122,10 @@ class Data():
 
     def change_username(self, username):
         self.client.change_username(username)
-        self.self_user = None
-        self.self_user = self.get_self_user()
-        self.root.ids.main_screen.on_login()
-        self.root.ids.settings_screen.on_login()
+        self.current_username = username
 
     def change_avatar(self, path_to_image):
         self.client.change_avatar(path_to_image)
         self.self_user = None
         self.self_user = self.get_self_user()
-        self.root.ids.main_screen.on_login()
-        self.root.ids.settings_screen.on_login()
-        self.root.ids.settings_profile_screen.on_login()
+        self.current_avatar_url = self.self_user.avatar_url

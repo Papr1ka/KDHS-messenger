@@ -10,7 +10,7 @@ from kivymd.uix.filemanager import MDFileManager
 from libs.components.settings_item import SettingsItem
 from libs.utils.behaviors import GetApp
 from libs.utils.checks import is_image
-from libs.components.snackbar import ErrorSnackbar, SuccessSnackbar
+from libs.components.snackbar import show_error_snackbar, show_success_snackbar
 from settings import BASE_DIR
 
 
@@ -25,21 +25,14 @@ class ProfileCard(MDCard, Meta):
 
 
 class SettingsProfileScreen(MDScreen, Meta, GetApp):
-    
-    def on_login(self):
-        self.avatar_url = self.app.get_self_user().avatar_url
-        user = self.app.get_self_user()
-        self.username = user.username
-        self.date_created = 'В разработке...'
 
     def change_username(self, obj, text):
         try:
             self.app.change_username(text)
         except ValueError:
-            self.show_error_snackbar("Такое имя пользователя уже занято")
+            show_error_snackbar("Такое имя пользователя уже занято")
         else:
-            self.username = self.app.get_self_user().username
-            self.show_success_snackbar("Имя пользователя изменено")
+            show_success_snackbar("Имя пользователя изменено")
     
     def select_path(self, path):
         self.exit_manager()
@@ -51,12 +44,6 @@ class SettingsProfileScreen(MDScreen, Meta, GetApp):
     
     def change_avatar(self, button):
         self.file_manager.show(self.path)
-    
-    def show_error_snackbar(self, text):
-        ErrorSnackbar(text=text).open()
-
-    def show_success_snackbar(self, text):
-        SuccessSnackbar(text=text).open()
     
     def exit_manager(self, *args):
         self.file_manager.close()

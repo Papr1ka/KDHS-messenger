@@ -1,4 +1,5 @@
 from kivy.properties import ColorProperty, StringProperty, ObjectProperty
+from kivy.metrics import dp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.list import OneLineAvatarIconListItem, IRightBodyTouch
 from kivymd.uix.dialog import MDDialog
@@ -9,17 +10,18 @@ from libs.utils.behaviors import GetApp
 
 class SettingsItem(OneLineAvatarIconListItem):
     bg_color = ColorProperty([0, 0, 0, 0])
-    text = StringProperty()
-    secondary_text = StringProperty()
+    text = StringProperty("")
+    secondary_text = StringProperty("")
     textinput = ObjectProperty(None)
 
 
 class RightTextInput(IRightBodyTouch, MDTextButton, GetApp):
     dialog = None
+    title = StringProperty("")
     
     def __init__(self, **kw) -> None:
-        self.register_event_type('on_submit')
         super().__init__(**kw)
+        self.register_event_type('on_submit')
     
     def on_submit(self, text: str):
         pass
@@ -36,7 +38,7 @@ class RightTextInput(IRightBodyTouch, MDTextButton, GetApp):
 
         if not self.dialog:
             self.dialog = MDDialog(
-                title="Имя",
+                title=self.title,
                 type="custom",
                 content_cls=TextFieldPopup(),
                 buttons=[
@@ -44,13 +46,15 @@ class RightTextInput(IRightBodyTouch, MDTextButton, GetApp):
                         text="Отменить",
                         theme_text_color="Custom",
                         text_color=self.app.colors['SecondAccentColor'],
-                        on_press = close_dilog
+                        on_press = close_dilog,
+                        radius=[dp(18)]
                     ),
                     MDFlatButton(
                         text="Сохранить",
                         theme_text_color="Custom",
                         text_color=self.app.colors['SecondAccentColor'],
-                        on_press = use_input
+                        on_press = use_input,
+                        radius=[dp(18)]
                     ),
                 ],
             )

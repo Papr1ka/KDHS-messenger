@@ -9,9 +9,10 @@ from settings import Templates, BASE_DIR
 from libs.screen_manager.screen_manager import RootScreenManager
 from libs.colors import colors
 from libs.data import Data
+from libs.settings import Settings
 
 
-class KDHSMessengerApp(MDApp, Data):
+class KDHSMessengerApp(MDApp, Data, Settings):
     
     colors = DictProperty({})
     

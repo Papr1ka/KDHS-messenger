@@ -12,7 +12,7 @@ class Message():
     def from_data(self, data: dict):
         self.id = data['id']
         self.author_id = data['author_id']
-        self.created_at = datetime.fromisoformat(data['created_at'][:-1]+ "+00:00")
+        self.created_at = datetime.fromisoformat(data['created_at'][:-1]+ "+00:00").astimezone()
         self.text = data['text']
         self.chat_id = data['chat']
         return self
