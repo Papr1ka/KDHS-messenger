@@ -99,7 +99,6 @@ class Data():
         self.story_message(data)
     
     def story_message(self, data: dict):
-        print(self.chats)
         if self.selected_chat_id != '':
             story_exists = self.chats.get(self.selected_chat_id, None)
             if not story_exists:
