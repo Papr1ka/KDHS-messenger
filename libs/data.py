@@ -33,7 +33,7 @@ class Data():
 
     def on_sign_out(self):
         print("on_sign_out")
-        self.self_user = User()
+        self.self_user = None
         self.contacts = []
         self.contacts_loaded = False
         self.contacts_viewset = []
