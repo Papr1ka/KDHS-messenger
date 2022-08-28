@@ -16,3 +16,10 @@ class ErrorSnackbar(ExtendedBaseSnackbar):
 
 class SuccessSnackbar(ExtendedBaseSnackbar):
     text = StringProperty("")
+
+
+def show_error_snackbar(text):
+    ErrorSnackbar(text=text).open()
+
+def show_success_snackbar(text):
+    SuccessSnackbar(text=text).open()

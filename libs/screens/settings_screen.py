@@ -20,14 +20,6 @@ class SettingsBehavior(GetApp):
     font_size = "18"
     dialog = None
     
-    def on_login(self):
-        self.ids.base.ids.avatar_image.source = self.app.get_self_user().avatar_url
-        self.username = self.app.get_self_user().username
-        self.ids.base.ids.username_header.text = self.username
-        # self.ids.base.ids.username.secondary_text = self.username
-        # self.ids.base.ids.font_size.secondary_text = "18"
-        pass
-    
     def show_username_change_dialog(self, ):
 
         def close_dilog(obj):
@@ -83,8 +75,3 @@ class SettingsScreen(MDResponsiveLayout, MDScreen):
         self.mobile_view = SettingsMobileView()
         self.tablet_view = SettingsTabletView()
         self.desktop_view = SettingsDesktopView()
-
-    def on_login(self):
-        self.mobile_view.on_login()
-        self.tablet_view.on_login()
-        self.desktop_view.on_login()

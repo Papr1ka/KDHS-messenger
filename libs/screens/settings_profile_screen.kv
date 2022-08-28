@@ -14,12 +14,12 @@
             size_hint: None, None
             size: dp(140), dp(140)
             pos: 60, root.height - self.height - 10
-            radius: [dp(18),]
+            radius: [dp(18)]
             FitImage:
                 source: root.avatar_url
                 size_hint: None, None
                 size: self.parent.size
-                radius: [dp(18),]
+                radius: [dp(18)]
                 pos: self.parent.pos
 
         MDLabel:
@@ -37,7 +37,8 @@
         MDLabel:
             id: label2
             text: 'Создан:\n' + root.date_created
-            adaptive_size: True
+            adaptive_height: True
+            text_size: dp(100), None
             color: 1, 1, 1, 0.8
             halign: 'center'
             font_size: 18
@@ -65,9 +66,9 @@
                 id: profile_card
                 pos_hint: {'center_x': 0.5}
                 width: min(root.width, dp(500))
-                avatar_url: root.avatar_url
-                username: root.username
-                date_created: root.date_created
+                avatar_url: app.current_avatar_url
+                username: app.current_username
+                date_created: app.current_date_created
             Widget:
                 size_hint_y: None
                 height: dp(40)
@@ -77,6 +78,6 @@
                 SettingsItem:
                     id: username_item
                     text: 'Имя'
-                    secondary_text: root.username
+                    secondary_text: app.current_username
         Widget:
             id: asscloser

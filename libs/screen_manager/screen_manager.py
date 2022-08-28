@@ -4,6 +4,7 @@ from libs.screens.register_screen import RegisterScreen
 from libs.screens.main_screen import MainScreen, MessagesScreen
 from libs.screens.settings_screen import SettingsScreen
 from libs.screens.settings_profile_screen import SettingsProfileScreen
+from libs.screens.settings_chat_screen import SettingsChatScreen
 from kivymd.uix.screen import Screen
 from libs.utils.window import get_window_type
 
