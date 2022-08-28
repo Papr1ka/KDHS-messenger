@@ -11,7 +11,6 @@ from libs.components.settings_item import SettingsItem
 from libs.utils.behaviors import GetApp
 from libs.utils.checks import is_image
 from libs.components.snackbar import show_error_snackbar, show_success_snackbar
-from settings import BASE_DIR
 
 
 class Meta():
@@ -25,6 +24,8 @@ class ProfileCard(MDCard, Meta):
 
 
 class SettingsProfileScreen(MDScreen, Meta, GetApp):
+    
+    path = '/'
 
     def change_username(self, obj, text):
         try:
@@ -38,19 +39,19 @@ class SettingsProfileScreen(MDScreen, Meta, GetApp):
         self.exit_manager()
         if is_image(path):
             self.app.change_avatar(path)
-            self.show_success_snackbar("Изображение успешно изменено")
+            show_success_snackbar("Изображение успешно изменено")
         else:
-            self.show_error_snackbar("Изображение/Файл не поддерживается")
+            show_error_snackbar("Изображение/Файл не поддерживается")
     
     def change_avatar(self, button):
         self.file_manager.show(self.path)
     
     def exit_manager(self, *args):
+        self.path = self.file_manager.current_path
         self.file_manager.close()
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.path = str(BASE_DIR)
         self.file_manager = MDFileManager(
             exit_manager=self.exit_manager,
             select_path=self.select_path,
