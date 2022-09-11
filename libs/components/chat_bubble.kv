@@ -5,8 +5,15 @@
     adaptive_height: True
     padding: [dp(8), dp(8)]
     text_color: app.colors["MainColor"]
-    text_size: self.width, None
-    size_hint_x: 0.8
+    size_hint_x: None
     halign: self.halign
     font_name: font
-    # font_size: dp(app.font_size)
+    text_size: self.width, None
+    canvas.before:
+        Color:
+            rgba: (0, 0, 0, 1)
+        RoundedRectangle:
+            radius: [16]
+            pos: self.pos if root.halign == 'left' else [self.pos[0] + self.text_size[0] - self.text_width, self.pos[1]]
+            # size: self.texture_size
+            size: self.text_width, self.texture_size[1]

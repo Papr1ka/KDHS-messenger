@@ -20,6 +20,7 @@
             do_scroll_x: False
             do_scroll_y: True
             viewclass: "ChatBubble"
+            scroll_wheel_distance: 60
             canvas.before:
                 Color:
                     rgba: app.colors["MassageScreenColor"]
@@ -33,7 +34,7 @@
                 orientation: "vertical"
                 size_hint_y: None
                 height: self.minimum_size[1]
-                default_size_hint: .8, None
+                default_size_hint: 0.8, None
                 default_size: None, None
 
         MDFloatLayout:
@@ -58,6 +59,7 @@
             do_scroll_x: False
             do_scroll_y: True
             viewclass: "ChatBubble"
+            scroll_wheel_distance: 60
             canvas.before:
                 Color:
                     rgba: app.colors["MassageScreenColor"]
@@ -71,7 +73,7 @@
                 orientation: "vertical"
                 size_hint_y: None
                 height: self.minimum_size[1]
-                default_size_hint: .8, None
+                default_size_hint: 0.8, None
                 default_size: None, None
 
         MDFloatLayout:

@@ -5,6 +5,7 @@ from libs.server import Client
 from kivymd.app import MDApp
 from kivy.properties import ObjectProperty, ListProperty, StringProperty, NumericProperty
 from libs.utils.window import get_window_type
+from kivy.uix.label import Label
 
 class Data():
     
@@ -44,7 +45,6 @@ class Data():
         self.current_avatar_url = "assets/icons/user.png"
         self.messages = []
         self.chats = {}
-        self.root.ids.main_screen.on_sign_out()
     
     def get_self_user(self):
         if self.self_user is None:
@@ -95,6 +95,9 @@ class Data():
             data.update({'pos_hint': {'right': 1}, 'halign': 'right', 'send_by_user': True})
         else:
             data.update({'pos_hint': {'x': 0}, 'halign': 'left', 'send_by_user': False})
+        l = Label(text=data['text'], markup=False)
+        l.texture_update()
+        data.update({'max_text_width': l.texture_size[0] * 1.08})
         self.messages.append(data)
         self.story_message(data)
     
