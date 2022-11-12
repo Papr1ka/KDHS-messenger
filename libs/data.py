@@ -6,6 +6,10 @@ from kivymd.app import MDApp
 from kivy.properties import ObjectProperty, ListProperty, StringProperty, NumericProperty
 from libs.utils.window import get_window_type
 from kivy.uix.label import Label
+from libs.utils.protocols import MyKivyClientFactory
+from twisted.internet import reactor
+from kivymd.app import MDApp
+
 
 class Data():
     
@@ -20,9 +24,10 @@ class Data():
     selected_chat_id = StringProperty("")
     current_destination_username = StringProperty("")
     current_destination_avatar_url = StringProperty("assets/icons/user.png")
-    current_username = StringProperty("")
+    current_username = StringProperty("TheLastPapr1ka")
     current_avatar_url = StringProperty("assets/icons/user.png")
     current_date_created = StringProperty("Now")
+    connection: MyKivyClientFactory
 
     def on_login(self):
         print("on_login")
@@ -31,6 +36,11 @@ class Data():
         self.current_avatar_url = self.self_user.avatar_url
         self.current_date_created = self.self_user.date_created.strftime("%d:%m:%Y")
         self.contacts = self.get_contacts()
+        self.app = MDApp.get_running_app()
+        # self.connection = MyKivyClientFactory("ws://127.0.0.1:8000/ws/messages/?token=0d2fbbd2e568294cd3b95471388275e300e51a93", self.app)
+        # reactor.connectTCP('127.0.0.1', 8000, self.app._factory)
+        # print("connected")
+
 
     def on_sign_out(self):
         print("on_sign_out")

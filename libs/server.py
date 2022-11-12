@@ -1,12 +1,17 @@
+import asyncio
 import requests
 from libs.exceptions import CommonPasswordError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
 from pathlib import Path
+import websockets
+import json
 
 SERVER_URL = "http://127.0.0.1:8000"
 #SERVER_URL = "https://connection-net.herokuapp.com"
 
 
 URL = SERVER_URL + "/api/v1/"
+WS_URL = "ws://" + SERVER_URL[7:] + "/ws/messages/?token="
+"127.0.0.1/ws/messages/?token=0d2fbbd2e568294cd3b95471388275e300e51a93"
 
 """
 Server Api
@@ -106,12 +111,97 @@ chat:
 
 """
 
+class Protocol():
+    def __init__(self):
+        self.autorized = False
+    
+    def requiredAuthorization(func):
+        def wrapper(self, *args, **kwargs):
+            if not self.autorized:
+                raise NotAutirizedError("Required Authorization")
+            return func(self, *args, **kwargs)
+        return wrapper
+
+    def autorize(self, username: str, password: str) -> str:
+        if not isinstance(username, str):
+            raise ValueError("Expected username:str")
+        if not isinstance(password, str):
+            raise ValueError("Expected password:str")
+
+        url = URL + 'auth/token/login'
+        data = {
+            'username': username,
+            'password': password
+        }
+        r = requests.post(url=url, json=data)
+        if r.status_code == 200:
+            self.token = r.json()['auth_token']
+            self.autorized = True
+            self.headers = {'Authorization': f'Token {self.token}'}
+            return self.token
+        raise AccessError(r.text)
+
+class WebsocketClient(Protocol):
+    
+    handlers = {
+        'on_message_create': [lambda *x: print(x)]
+    }
+    
+    def __init__(self):
+        self.client = websockets
+        super().__init__()
+    
+    async def connect(self):
+        self.client = await self.client.connect(WS_URL + self.token)
+    
+    def requiredAuthorization(func):
+        def wrapper(self, *args, **kwargs):
+            if not self.autorized:
+                raise NotAutirizedError("Required Authorization")
+            return func(self, *args, **kwargs)
+        return wrapper
+    
+    async def listen(self):
+        await self.client.send(json.dumps({
+            'pk': "3",
+            'action': "start_listen",
+            'request_id': 123,
+        }))
+        print("sended")
+        while True:
+            bytes_data = await self.client.recv()
+            data = json.loads(bytes_data)
+            await self.on_event(data, data['event'])
+    
+    async def on_event(self, data, event):
+        await self.dispatch(event, data)
+    
+    async def bind(self, event, function):
+        handlers = self.handlers.get(event, None)
+        if handlers:
+            self.handlers[event].append(function)
+        else:
+            self.handlers[event] = [function]
+    
+    async def dispatch(self, event, data):
+        handlers = self.handlers.get(event, None)
+        if handlers:
+            for handler in handlers:
+                handler(data)
+        else:
+            print("event", event, "Does not exists")
+    
+    async def handle_send_message(self):
+        pass
+
+    def send_message(self):
+        pass
+
 
 class Client():
     def __init__(self) :
         self.autorized = False
-    
-    
+
     def requiredAuthorization(func):
         def wrapper(self, *args, **kwargs):
             if not self.autorized:
@@ -162,6 +252,20 @@ class Client():
             raise ServerError(f'Server exception 204: {r.text}')
         elif r.status_code == 400:
             raise ServerError(f'Server exception 400: {r.text}')
+        raise AccessError(r.text)
+
+    @requiredAuthorization
+    def searchUser(self, username: str) -> dict:
+        url = URL + 'user/search'
+        r = requests.get(url=url, headers=self.headers, data={'username': username})
+        if r.status_code == 200:
+            return r.json()
+        elif r.status_code == 204:
+            raise ServerError(f'Server exception 204: {r.text}')
+        elif r.status_code == 400:
+            raise ServerError(f'Server exception 400: {r.text}')
+        elif r.status_code == 500:
+            raise ServerError(f'Server exception 500: Пользователь с таким именем не найден')
         raise AccessError(r.text)
     
     @requiredAuthorization

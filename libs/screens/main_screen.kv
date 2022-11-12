@@ -123,14 +123,15 @@
 
         MDNavigationDrawerItem:
             icon: "account-cog"
-            text: "Profile"
+            text: "Профиль"
             text_color: app.colors['MainColor']
             font_size: 16
             selected_color: app.colors['MainColor']
+            on_press: root.show_username_change_dialog()
 
         MDNavigationDrawerItem:
             icon: "cog"
-            text: "Settings"
+            text: "Настройки"
             text_color: app.colors['MainColor']
             font_size: 16
             selected_color: app.colors['MainColor']
@@ -138,11 +139,19 @@
 
         MDNavigationDrawerItem:
             icon: "account-arrow-left"
-            text: "Sign out"
+            text: "Выйти"
             text_color: app.colors['MainColor']
             font_size: 16
             selected_color: app.colors['MainColor']
             on_press: root.sign_out()
+        
+        MDNavigationDrawerItem:
+            icon: "plus"
+            text: "Создать чат"
+            text_color: app.colors['MainColor']
+            font_size: 16
+            selected_color: app.colors['MainColor']
+            on_press: root.show_chat_create_dialog()
 
 
 <Sidebar@SidebarNavigation>:

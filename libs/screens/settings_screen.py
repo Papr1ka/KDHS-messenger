@@ -1,55 +1,85 @@
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.responsivelayout import MDResponsiveLayout
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.floatlayout import MDFloatLayout, MDAdaptiveWidget
 from kivymd.uix.relativelayout import MDRelativeLayout
 from kivymd.uix.toolbar import MDTopAppBar
-from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
+from kivy.clock import Clock
 
 from libs.utils.behaviors import GetApp
-from libs.components.textfield_popup import TextFieldPopup
+from libs.components.snackbar import show_error_snackbar, show_success_snackbar
+from kivymd.uix.filemanager import MDFileManager
+from libs.utils.checks import is_image
 
+class MyToggleButton(MDFlatButton, MDToggleButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 class SettingsScreenBase(MDRelativeLayout):
     pass
 
 
 class SettingsBehavior(GetApp):
-    username = "Loading..."
-    font_size = "18"
     dialog = None
     
-    def show_username_change_dialog(self, ):
+    path = '/'
+    
+    def select_path(self, path):
+        self.exit_manager()
+        if is_image(path):
+            self.app.change_avatar(path)
+            show_success_snackbar("Изображение успешно изменено")
+        else:
+            show_error_snackbar("Изображение/Файл не поддерживается")
+    
+    def change_avatar(self, button):
+        self.file_manager.show(self.path)
+    
+    def exit_manager(self, *args):
+        self.path = self.file_manager.current_path
+        self.file_manager.close()
 
-        def close_dilog(obj):
-            self.dialog.dismiss()
-        
-        def use_input(obj):
-            text = self.dialog.content_cls.get_text()
-            print(text)
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.file_manager = MDFileManager(
+            exit_manager=self.exit_manager,
+            select_path=self.select_path,
+        )
+        Clock.schedule_once(self.bind_components, 1)
+    
+    def change_data(self, instance):
+        print(instance.text)
+    
+    def change_display_name(self, instance):
+        print(instance.text)
 
-        if not self.dialog:
-            self.dialog = MDDialog(
-                title="Username",
-                type="custom",
-                content_cls=TextFieldPopup(),
-                buttons=[
-                    MDFlatButton(
-                        text="CANCEL",
-                        theme_text_color="Custom",
-                        text_color=self.app.colors['SecondAccentColor'],
-                        on_press = close_dilog
-                    ),
-                    MDFlatButton(
-                        text="OK",
-                        theme_text_color="Custom",
-                        text_color=self.app.colors['SecondAccentColor'],
-                        on_press = use_input
-                    ),
-                ],
-            )
-        self.dialog.open()
+    def change_font_size(self, instance):
+        font_size = instance.text
+        try:
+            font_size = int(font_size)
+        except (TypeError, ValueError):
+            show_error_snackbar("Шрифт должен быть от 12 до 40")
+        else:
+            if 12 <= font_size <= 40:
+                self.app.change_font_size(font_size)
+                show_success_snackbar("Шрифт успешно изменён")
+            else:
+                show_error_snackbar("Шрифт должен быть от 12 до 40")
+    
+    def bind_components(self, tm):
+        self.ids.base.ids.avatar.bind(
+            on_press=self.change_avatar
+        )
+        self.ids.base.ids.status.bind(
+            on_text_validate=self.change_data
+        )
+        self.ids.base.ids.display_name.bind(
+            on_text_validate=self.change_display_name
+        )
+        self.ids.base.ids.font_size.bind(
+            on_text_validate=self.change_font_size
+        )
+
 
 class SettingsMobileView(MDScreen, SettingsBehavior):
     pass
