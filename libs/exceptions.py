@@ -15,3 +15,6 @@ class ShortPasswordError(Exception):
 
 class NotAutirizedError(Exception):
     pass
+
+class NotFoundError(Exception):
+    pass

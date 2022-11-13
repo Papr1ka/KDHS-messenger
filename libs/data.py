@@ -1,5 +1,7 @@
 from libs.chat import Chat
+from libs.exceptions import ServerError
 from libs.message import Message
+from libs.models import *
 from libs.user import User
 from libs.server import Client
 from kivymd.app import MDApp
@@ -16,8 +18,12 @@ class Data():
     client: Client
     app: MDApp
     self_user: User = None
-    contacts = ListProperty([])
-    contacts_viewset = ListProperty([])
+    #данные для контактов, зеркало для display_viewset
+    contacts: list[ChatModel] = ListProperty([])
+    #те данные, которые должны отображаться в данный момент
+    display_viewset: list[dict[Union[ChatViewModel, ContactViewModel]]] = ListProperty([])
+    #сохранённые данные контактов
+    contacts_viewset: list[dict[Union[ChatViewModel, ContactViewModel]]] = ListProperty([])
     contacts_loaded: bool = False
     messages = ListProperty([])
     chats = {}
@@ -35,7 +41,11 @@ class Data():
         self.current_username = self.self_user.username
         self.current_avatar_url = self.self_user.avatar_url
         self.current_date_created = self.self_user.date_created.strftime("%d:%m:%Y")
-        self.contacts = self.get_contacts()
+        self.load_contacts()
+        self.show_contacts()
+        print(self.contacts)
+        print(self.contacts_viewset)
+        print(self.display_viewset)
         self.app = MDApp.get_running_app()
         # self.connection = MyKivyClientFactory("ws://127.0.0.1:8000/ws/messages/?token=0d2fbbd2e568294cd3b95471388275e300e51a93", self.app)
         # reactor.connectTCP('127.0.0.1', 8000, self.app._factory)
@@ -56,6 +66,41 @@ class Data():
         self.messages = []
         self.chats = {}
     
+    def search_contacts(self, username: str):
+        try:
+            users: list[UserModel] = self.client.searchUsers(username)
+        except ServerError:
+            viewset = []
+        else:
+            viewset = [asdict(createContact(user)) for user in users]
+        self.display_viewset.clear()
+        self.display_viewset = viewset
+        print("обновил")
+    
+    def show_contacts(self):
+        self.display_viewset.clear()
+        self.display_viewset = self.contacts_viewset
+        print(self.display_viewset)
+    
+    def create_chat(self, user_id: int):
+        print(user_id)
+        print("create chat")
+        try:
+            chat = self.client.createchat(str(user_id))
+        except Exception as E:
+            print("Не судьба", E)
+        else:
+            try:
+                user = self.client.getuser(str(user_id))
+            except Exception as E:
+                print("Не удалось найти пользователя", E)
+            else:
+                chat = ChatModel(chat.id, chat.messages, chat.created_at, chat.users, user.username, user.id, "", user.avatar_image)
+                self.contacts.insert(0, chat)
+                self.contacts_viewset.insert(0, asdict(createChatView(chat)))
+                self.show_contacts()
+                self.on_chat_switch(str(chat.id))
+
     def get_self_user(self):
         if self.self_user is None:
             data = self.client.getMe()
@@ -63,16 +108,15 @@ class Data():
             return self.self_user
         return self.self_user
     
-    def get_contacts(self):
+    def load_contacts(self):
         if not self.contacts_loaded:
             data = self.client.getcontacts()['chats']['chats']
+            self.contacts.clear()
             for chat in data:
-                chat_obj = Chat()
-                self.contacts.append(chat_obj.from_data(chat))
-                self.contacts_viewset.append(chat_obj.to_view())
+                chat_model = createChat(chat)
+                self.contacts.append(chat_model)
+                self.contacts_viewset.append(asdict(createChatView(chat_model)))
             self.contacts_loaded = True
-            return self.contacts
-        return self.contacts
     
     def get_messages(self, chat_id: str):
         story_exists = self.chats.get(chat_id, None)
@@ -130,7 +174,7 @@ class Data():
         if contact:
             contact.last_message = message
             self.contacts_viewset.remove(self.find_contact_view_by_chat_id(chat_id))
-            self.contacts_viewset.insert(0, contact.to_view())
+            self.contacts_viewset.insert(0, asdict(createChatView(contact)))
 
     def change_username(self, username):
         self.client.change_username(username)

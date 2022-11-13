@@ -18,16 +18,28 @@ from libs.components.listitem import ChatListItem
 from libs.exceptions import ServerError
 from libs.utils.behaviors import GetApp
 from libs.components.chat_create_popup import ChatCreatePopup
+from libs.models import *
 
 
 class ChatItem(ChatListItem):
+    
     def on_touch_down(self, touch):
         if self.app and self.collide_point(touch.x, touch.y):
             self.open_messages()
+            print(self.text)
+            print(self.chat_id)
     
     def open_messages(self):
+        print(self.__dict__)
+        print(self.viewclass)
         screen = self.app.screen_manager.adaptive_switch_screen('messages_screen', self.app.root)
-        self.app.on_chat_switch(self.chat_id)
+        try:
+            self.app.on_chat_switch(self.chat_id)
+        except AttributeError as E:
+            print(E)
+            self.app.create_chat(self.id)
+            
+            print("вызвал функцию, отработала")
 
 
 class ContentNavigationDrawer(MDBoxLayout):
@@ -36,7 +48,24 @@ class ContentNavigationDrawer(MDBoxLayout):
 
 class MainContactEventBehavior(GetApp):
     
-    contacts = ListProperty([])
+    # contacts = ListProperty([])
+    
+    def __init__(self) -> None:
+        super().__init__()
+        Clock.schedule_once(self.bind_components, 1)
+    
+    def bind_components(self, tm):
+        if self.ids.get("search"):
+            self.ids.search.textinput.bind(
+                on_text_validate=self.search
+            )
+    
+    def search(self, textinput):
+        query = textinput.text
+        if query != '':
+            self.app.search_contacts(query)
+        else:
+            self.app.show_contacts()
 
 class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
     back_color = ColorProperty((0, 0, 0, 1))
@@ -99,7 +128,7 @@ class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
         if self.dialog_chat:
             username = self.dialog_chat.content_cls.ids.username.text
             try:
-                user = self.app.client.searchUser(username)
+                user = self.app.client.searchUsers(username)
             except ServerError:
                 pass
             else:
@@ -107,6 +136,7 @@ class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
                 print(user)
         else:
             print("что?")
+
 class MainMobileView(MDScreen, MainContactEventBehavior):
     def on_enter(self):
         super().on_enter()

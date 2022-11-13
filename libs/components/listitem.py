@@ -30,6 +30,16 @@ class ChatListItem(TwoLineAvatarIconListItem, HoverBehavior):
     def on_leave(self):
         self.bg_color = self.get_app().colors['ThirdAccentColor']
 
+"""
+Добавить def refresh_view_attrs(self, rv, index, data):
+        ''' Catch and handle the view changes '''
+        self.index = index
+        self.send_by_user = data['send_by_user']
+        self.halign = data['halign']
+        self.text_width = min(data['max_text_width'], self.width) + dp(18)
+        return super().refresh_view_attrs(
+            rv, index, data)
+"""
 
 class RightTime(IRightBody, MDLabel):
     pass

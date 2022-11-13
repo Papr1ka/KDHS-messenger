@@ -1,11 +1,13 @@
 import asyncio
 import requests
-from libs.exceptions import CommonPasswordError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
+from libs.exceptions import CommonPasswordError, NotFoundError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
 from pathlib import Path
 import websockets
 import json
 
-SERVER_URL = "http://127.0.0.1:8000"
+from libs.models import ChatAPIModel, UserModel, createChatAPI, createUser
+from settings import SERVER_URL
+
 #SERVER_URL = "https://connection-net.herokuapp.com"
 
 
@@ -255,11 +257,12 @@ class Client():
         raise AccessError(r.text)
 
     @requiredAuthorization
-    def searchUser(self, username: str) -> dict:
+    def searchUsers(self, username: str) -> list[dict[UserModel]]:
         url = URL + 'user/search'
         r = requests.get(url=url, headers=self.headers, data={'username': username})
         if r.status_code == 200:
-            return r.json()
+            resp = r.json()
+            return [createUser(i) for i in resp]
         elif r.status_code == 204:
             raise ServerError(f'Server exception 204: {r.text}')
         elif r.status_code == 400:
@@ -360,7 +363,7 @@ class Client():
         raise AccessError(r.text)
 
     @requiredAuthorization
-    def createchat(self, user_id: str):
+    def createchat(self, user_id: str) -> ChatAPIModel:
         if not isinstance(user_id, str):
             raise ValueError("Expected user_id:str")
 
@@ -376,8 +379,23 @@ class Client():
             error = result.get("error", None)
             if error:
                 raise ValueError(error)
-            return result
+            return createChatAPI(result)
         raise AccessError(r.text)
+
+    @requiredAuthorization
+    def getuser(self, user_id: str) -> UserModel:
+        if not isinstance(user_id, str):
+            raise ValueError("Expected user_id:str")
+
+        url = URL + 'user/' + user_id + "/"
+        r = requests.get(url=url, headers=self.headers)
+        if r.status_code == 200:
+            return createUser(r.json())
+        elif r.status_code == 401:
+            raise AccessError(r.text)
+        elif r.status_code == 404:
+            raise NotFoundError(f"User with id {user_id} does not exists")
+        raise ServerError(r.text)
     
     def register(self, username: str, password: str) -> str:
         
