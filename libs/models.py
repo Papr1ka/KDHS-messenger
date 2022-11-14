@@ -95,16 +95,18 @@ class ContactViewModel():
 @dataclass
 class ChatViewModel(ContactViewModel):
     unread_messages: bool
-    chat_id: str
+    chat_id: Union[str, None]
 
 
 def createContact(user: UserModel):
-    contact_view = ContactViewModel(
+    contact_view = ChatViewModel(
         id=str(user.id),
         text=user.username,
         secondary_text='Написать первым',
         time='',
-        image=user.avatar_image
+        image=user.avatar_image,
+        unread_messages=False,
+        chat_id=""
     )
     return contact_view
 
