@@ -9,6 +9,8 @@ Window.minimum_height = 500
 Window.minimum_width = 400
 
 LabelBase.register(name='Nunito', fn_regular='assets/fonts/Nunito.ttf')
+LabelBase.register(name='InterM', fn_regular='assets/fonts/Inter-Medium.otf')
+LabelBase.register(name='InterR', fn_regular='assets/fonts/Inter-Regular.otf')
 
 #path to project directory
 BASE_DIR = Path(__file__).resolve().parent
@@ -45,3 +47,5 @@ def on_size(self, instance, size: list) -> None:
 
 
 WindowController.on_size = on_size
+
+SERVER_URL = "http://127.0.0.1:8000"

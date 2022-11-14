@@ -123,14 +123,15 @@
 
         MDNavigationDrawerItem:
             icon: "account-cog"
-            text: "Profile"
+            text: "Профиль"
             text_color: app.colors['MainColor']
             font_size: 16
             selected_color: app.colors['MainColor']
+            on_press: root.show_username_change_dialog()
 
         MDNavigationDrawerItem:
             icon: "cog"
-            text: "Settings"
+            text: "Настройки"
             text_color: app.colors['MainColor']
             font_size: 16
             selected_color: app.colors['MainColor']
@@ -138,11 +139,19 @@
 
         MDNavigationDrawerItem:
             icon: "account-arrow-left"
-            text: "Sign out"
+            text: "Выйти"
             text_color: app.colors['MainColor']
             font_size: 16
             selected_color: app.colors['MainColor']
             on_press: root.sign_out()
+        
+        MDNavigationDrawerItem:
+            icon: "plus"
+            text: "Создать чат"
+            text_color: app.colors['MainColor']
+            font_size: 16
+            selected_color: app.colors['MainColor']
+            on_press: root.show_chat_create_dialog()
 
 
 <Sidebar@SidebarNavigation>:
@@ -170,6 +179,7 @@
                                     pos_hint: {"x": 0.03, "center_y": 0.5}
                                     on_press: nav_drawer.set_state("open")
                                 TextInputRound:
+                                    id: search
                                     pos_hint: {"right": 0.95, "center_y": 0.5}
                                     size_hint: 0.8, 0.6
                                     back_color: app.colors["SearchColor"]
@@ -178,7 +188,7 @@
                                     
                             RecycleView:
                                 size_hint_y: 0.9
-                                data: app.contacts_viewset
+                                data: app.display_viewset
                                 viewclass: 'ChatItem'
                                 do_scroll_x: False
                                 do_scroll_y: True
@@ -218,6 +228,7 @@
                                         pos_hint: {"x": 0.03, "center_y": 0.5}
                                         on_press: nav_drawer.set_state("open")
                                     TextInputRound:
+                                        id: search
                                         pos_hint: {"right": 0.95, "center_y": 0.5}
                                         size_hint: 0.75, 0.6
                                         back_color: app.colors["SearchColor"]
@@ -226,7 +237,7 @@
                                         
                                 RecycleView:
                                     size_hint_y: 0.9
-                                    data: app.contacts_viewset
+                                    data: app.display_viewset
                                     viewclass: 'ChatItem'
                                     do_scroll_x: False
                                     do_scroll_y: True
@@ -268,6 +279,7 @@
                                         pos_hint: {"x": 0.03, "center_y": 0.5}
                                         on_press: nav_drawer.set_state("open")
                                     TextInputRound:
+                                        id: search
                                         pos_hint: {"right": 0.95, "center_y": 0.5}
                                         size_hint: 0.75, 0.6
                                         back_color: app.colors["SearchColor"]
@@ -276,7 +288,7 @@
                                         
                                 RecycleView:
                                     size_hint_y: 0.9
-                                    data: app.contacts_viewset
+                                    data: app.display_viewset
                                     viewclass: 'ChatItem'
                                     do_scroll_x: False
                                     do_scroll_y: True

@@ -1,100 +1,137 @@
 #:kivy 2.1.0
 #:import SettingsToolbar libs.screens.settings_screen.SettingsToolbar
+#:set font "Nunito"
 
 <SettingsScreen>:
     name: 'settings_screen'
     Button:
         text: 'работает'
 
+<Field@MDTextField>:
+    mode: "fill"
+    line_color_normal: app.colors["UpLineColor"]
+    line_color_focus: app.colors["UpLineColor"]
+    fill_color_normal: (1, 0, 0, 0)
+    fill_color_focus: (1, 0, 0, 0)
+    font_size: 24
+    font_name: "InterM"
+    font_name_helper_text: "InterM"
+    line_color_focus: app.colors["MainColor"]
+    hint_text_color_focus: app.colors["MainColor"]
+    text_color_normal: app.colors["MainColor"]
+    text_color_focus: app.colors["MainColor"]
 
 <SettingsScreenBase@MDRelativeLayout>:
-    MDSliverAppbar:
-        max_height: '160dp'
-        title: 'Settings'
-        pin_top: True
-        background_color: app.colors['SecondAccentColor']
-        toolbar_cls: SettingsToolbar()
-        radius: [20]
-        MDSliverAppbarHeader:
-            MDScreen:
-                md_bg_color: app.colors['SecondAccentColor']
-                MDBoxLayout:
-                    adaptive_height: True
-                    orientation: "vertical"
-                    pos_hint: {'center_x': 0.5,'center_y': 0.5}
-                    spacing: "20dp"
-                    MDBoxLayout:
-                        size_hint: None, None
-                        size: '85dp', '85dp'
-                        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-                        FitImage:
-                            id: avatar_image
-                            source: app.current_avatar_url
-                            allow_stretch: True
-                            keep_ratio: False
-                            radius: [18]
-                    MDLabel:
-                        id: username_header
-                        text: app.current_username
-                        halign: "center"
-                        adaptive_height: True
-        MDSliverAppbarContent:
-            id: content
-            adaptive_height: True
-            orientation: "vertical"
+    md_bg_color: app.colors["MassageScreenColor"]
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            id: toolbar
+            title: "Настройки"
+            left_action_items: [["arrow-left", lambda x: app.screen_manager.switch_screen('main_screen')]]
+            md_bg_color: app.colors["UpLineColor"]
+            text_color: app.colors['MainColor']
+        MDScrollView:
+            do_scroll_y: True
+            do_scroll_x: False
+            size_hint_x: None
+            width: dp(360)
+            pos_hint: {'center_x': 0.5, 'top': 1}
             MDBoxLayout:
                 orientation: 'vertical'
                 id: op
                 size_hint: None, None
-                width: min(dp(500), root.width)
+                width: dp(320)
                 height: sum([i.height for i in self.children])
                 pos_hint: {'center_x': 0.5, 'top': 1}
-                md_mg_color: (1, 0, 0, 1)
-
-                MDCard:
-                    size_hint_y: None
-                    height: "150dp"
-                    orientation: "vertical"
-                    OneLineIconListItem:
-                        id: username
-                        text: "Изменить профиль"
-                        divider: None
-                        on_press: app.screen_manager.switch_screen('settings_profile_screen')
-                        IconLeftWidget:
-                            icon: "account-circle-outline"
-                            icon_size: "32sp"
-                            ripple_scale: 0
-                    OneLineIconListItem:
-                        text: "Настройки чатов"
-                        divider: None
-                        on_press: app.screen_manager.switch_screen('settings_chat_screen')
-                        IconLeftWidget:
-                            icon: "chat-outline"
-                            icon_size: "32sp"
-                            ripple_scale: 0
-                    OneLineIconListItem:
-                        text: "Память"
-                        divider: None
-                        IconLeftWidget:
-                            icon: "folder-download-outline"
-                            icon_size: "32sp"
-                            ripple_scale: 0
+                spacing: dp(20)
                 Widget:
+                    height: dp(10)
+                MDBoxLayout:
+                    # md_bg_color: (1, 0, 0, 0.1)ы
+                    orientation: 'horizontal'
                     size_hint_y: None
-                    height: "10dp"
-                MDCard:
-                    size_hint_y: None
-                    height: "50dp"
-                    orientation: "vertical"
-                    OneLineIconListItem:
-                        id: username
-                        text: "Справка"
-                        divider: None
-                        IconLeftWidget:
-                            icon: "information-outline"
-                            icon_size: "32sp"
-                            ripple_scale: 0
+                    height: dp(80)
+                    spacing: dp(20)
 
+                    MDFlatButton:
+                        id: avatar
+                        size_hint: None, None
+                        size: dp(80), dp(80)
+                        radius: [dp(64)]
+                        FitImage:
+                            source: app.current_avatar_url
+                            size_hint: None, None
+                            size: self.parent.size
+                            radius: [dp(64)]
+                            pos: self.parent.pos
+
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        MDLabel:
+                            text: "Kirill"
+                            font_size: 24
+                            font_name: "InterM"
+                        MDLabel:
+                            text: "@" + app.current_username
+                            font_size: 20
+                            font_name: "InterR"
+                MDLabel:
+                    text: "Профиль"
+                    font_size: 14
+                    font_name: "InterR"
+                Field:
+                    id: status
+                    text: "Разработчик"
+                    hint_text: "Статус"
+                    max_text_length: 200
+                Field:
+                    id: display_name
+                    text: "Кирилл"
+                    hint_text: "Отображаемое имя"
+                    max_text_length: 40
+                MDLabel:
+                    text: "Уведомления"
+                    font_size: 14
+                    font_name: "InterR"
+                MDBoxLayout:
+                    padding: [dp(20), 0, dp(20), 0]
+                    orientation: 'horizontal'
+                    MDLabel:
+                        text: "Включить"
+                        font_size: 24
+                        font_name: "InterM"
+                    MDSwitch:
+                MDLabel:
+                    text: "Вид"
+                    font_size: 14
+                    font_name: "InterR"
+                Field:
+                    id: font_size
+                    text: "20"
+                    hint_text: "Шрифт"
+                MDBoxLayout:
+                    padding: [dp(20), 0, dp(20), 0]
+                    orientation: 'horizontal'
+                    MDLabel:
+                        text: "Тёмная тема"
+                        font_size: 24
+                        font_name: "InterM"
+                    MDSwitch:
+                MDRoundFlatButton:
+                    id: button_save
+                    text: "Сохранить"
+                    text_color: 0, 1, 0, 1
+                    md_bg_color: app.colors['AccentColor']
+                    line_color: app.colors['AccentColor']
+                    font_name: "InterM"
+                    font_size: 24
+                    size_hint_x: None
+                    width: dp(200)
+                    pos_hint: {'center_x': 0.5}
+                    text_color: app.colors['MainColor']
+                Widget:
+                    height: dp(20)
 
 <SettingsMobileView>:
     SettingsScreenBase:

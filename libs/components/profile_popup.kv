@@ -1,0 +1,49 @@
+#:kivy 2.1.0
+
+<ProfilePopup>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: op.height
+    MDBoxLayout:
+        orientation: 'vertical'
+        size_hint_x: None
+        width: dp(360)
+        pos_hint: {'center_x': 0.5, 'top': 1}
+        MDBoxLayout:
+            orientation: 'vertical'
+            id: op
+            size_hint: None, None
+            width: dp(320)
+            height: sum([i.height for i in self.children])
+            pos_hint: {'center_x': 0.5, 'top': 1}
+            spacing: dp(20)
+            MDBoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: dp(80)
+                spacing: dp(20)
+                FitImage:
+                    source: root.avatar_url
+                    size_hint: None, None
+                    size: dp(120), dp(120)
+                    radius: [dp(64)]
+                    allow_stretch: True
+                    keep_ratio: False
+
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDLabel:
+                        text: root.display_name
+                        font_size: 24
+                        font_name: "InterM"
+                    MDLabel:
+                        text: "@" + root.username
+                        font_size: 20
+                        font_name: "InterR"
+            MDLabel:
+                size_hint: (None, None)
+                text_size: root.width - dp(96), None
+                size: self.texture_size
+                text: root.status
+                font_size: 24
+                font_name: "InterR"

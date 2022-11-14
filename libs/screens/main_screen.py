@@ -1,31 +1,45 @@
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.responsivelayout import MDResponsiveLayout
 from kivy.properties import ListProperty, ColorProperty, StringProperty, OptionProperty, DictProperty
-from kivymd.uix.floatlayout import MDFloatLayout
-from kivymd.uix.behaviors.hover_behavior import HoverBehavior
-from kivymd.app import MDApp
 from kivy.properties import StringProperty
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.navigationdrawer import MDNavigationDrawer
-from kivymd.uix.label import MDLabel
 from kivy.uix.relativelayout import RelativeLayout
 from kivymd.uix.widget import MDAdaptiveWidget
 from kivy.clock import Clock
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDFlatButton
+from kivy.metrics import dp
 
+from libs.components.profile_popup import ProfilePopup
 from libs.components.text_input_round import TextInputRound, TextInputString
 from libs.components.chat_bubble import ChatBubble
 from libs.components.listitem import ChatListItem
+from libs.exceptions import ServerError
 from libs.utils.behaviors import GetApp
+from libs.components.chat_create_popup import ChatCreatePopup
+from libs.models import *
 
 
 class ChatItem(ChatListItem):
+    
     def on_touch_down(self, touch):
         if self.app and self.collide_point(touch.x, touch.y):
             self.open_messages()
+            print(self.text)
+            print(self.chat_id)
     
     def open_messages(self):
+        print(self.__dict__)
+        print(self.viewclass)
         screen = self.app.screen_manager.adaptive_switch_screen('messages_screen', self.app.root)
-        self.app.on_chat_switch(self.chat_id)
+        try:
+            self.app.on_chat_switch(self.chat_id)
+        except AttributeError as E:
+            print(E)
+            self.app.create_chat(self.id)
+            
+            print("вызвал функцию, отработала")
 
 
 class ContentNavigationDrawer(MDBoxLayout):
@@ -34,18 +48,94 @@ class ContentNavigationDrawer(MDBoxLayout):
 
 class MainContactEventBehavior(GetApp):
     
-    #data = ListProperty([{'text': "Алибаба", 'icon_source': "assets/icons/user.png"}])
-    contacts = ListProperty([])
-
+    # contacts = ListProperty([])
+    
+    def __init__(self) -> None:
+        super().__init__()
+        Clock.schedule_once(self.bind_components, 1)
+    
+    def bind_components(self, tm):
+        if self.ids.get("search"):
+            self.ids.search.textinput.bind(
+                on_text_validate=self.search
+            )
+    
+    def search(self, textinput):
+        query = textinput.text
+        if query != '':
+            self.app.search_contacts(query)
+        else:
+            self.app.show_contacts()
 
 class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
     back_color = ColorProperty((0, 0, 0, 1))
     header_head = StringProperty("")
     icon_source = StringProperty("")
+    dialog_username = None
+    dialog_chat = None
     
     def sign_out(self):
         self.app.screen_manager.switch_screen("login_screen")
         self.app.on_sign_out()
+    
+    
+    def show_username_change_dialog(self, *args):
+        
+        popup = ProfilePopup(
+            avatar_url=self.app.current_avatar_url,
+            display_name="Кирилл",
+            username=self.app.current_username,
+            status="Бог"
+        )
+        
+        if not self.dialog_username:
+            self.dialog_username = MDDialog(
+                md_bg_color=self.app.colors["SearchColor"],
+                title="Информация",
+                type="custom",
+                content_cls=popup,
+                width_offset=0,
+            )
+        self.dialog_username.open()
+
+
+    def show_chat_create_dialog(self):
+        if not self.dialog_chat:
+            self.dialog_chat = MDDialog(
+                title="Address:",
+                type="custom",
+                content_cls=ChatCreatePopup(),
+                buttons=[
+                    MDFlatButton(
+                        text="Отменить",
+                        theme_text_color="Custom",
+                        text_color=self.app.colors["MainColor"],
+                        radius=[dp(18)]
+                    ),
+                    MDFlatButton(
+                        text="Найти",
+                        theme_text_color="Custom",
+                        text_color=self.app.colors["MainColor"],
+                        radius=[dp(18)],
+                        on_release=self.find_user
+                    ),
+                ],
+            )
+        self.dialog_chat.open()
+    
+    def find_user(self, *args):
+        print(args)
+        if self.dialog_chat:
+            username = self.dialog_chat.content_cls.ids.username.text
+            try:
+                user = self.app.client.searchUsers(username)
+            except ServerError:
+                pass
+            else:
+                print("нашёл")
+                print(user)
+        else:
+            print("что?")
 
 class MainMobileView(MDScreen, MainContactEventBehavior):
     def on_enter(self):

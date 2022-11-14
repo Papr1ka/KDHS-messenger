@@ -16,6 +16,8 @@ class ChatListItem(TwoLineAvatarIconListItem, HoverBehavior):
     text = StringProperty()
     secondary_text = StringProperty()
     time = StringProperty()
+    chat_id = StringProperty()
+    unread_messages = BooleanProperty()
     
     app = None
     
@@ -30,6 +32,18 @@ class ChatListItem(TwoLineAvatarIconListItem, HoverBehavior):
     def on_leave(self):
         self.bg_color = self.get_app().colors['ThirdAccentColor']
 
+    def refresh_view_attrs(self, rv, index, data):
+        ''' Catch and handle the view changes '''
+        self.index = index
+        self.image = data['image']
+        self.bg_color = data['bg_color']
+        self.text = data['text']
+        self.secondary_text = data['secondary_text']
+        self.time = data['time']
+        self.chat_id = data['chat_id']
+        self.unread_messages = data['unread_messages']
+        return super().refresh_view_attrs(
+            rv, index, data)
 
 class RightTime(IRightBody, MDLabel):
     pass

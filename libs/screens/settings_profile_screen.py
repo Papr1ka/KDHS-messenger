@@ -2,12 +2,8 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.card import MDCard
 from kivy.properties import StringProperty
 from kivy.clock import Clock
-from kivy.metrics import dp
-from kivy.core.window import Window
-from kivymd.uix.snackbar import Snackbar
 from kivymd.uix.filemanager import MDFileManager
 
-from libs.components.settings_item import SettingsItem
 from libs.utils.behaviors import GetApp
 from libs.utils.checks import is_image
 from libs.components.snackbar import show_error_snackbar, show_success_snackbar

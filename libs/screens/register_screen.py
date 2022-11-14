@@ -1,7 +1,5 @@
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.responsivelayout import MDResponsiveLayout
-from kivymd.uix.label import MDLabel
-from libs.components.text_input_round import TextInputRoundIcon
 from libs.screens.login_screen import LoginBehavior
 from kivymd.uix.floatlayout import MDFloatLayout
 from libs.utils.checks import check_password_length
@@ -32,7 +30,7 @@ class RegisterBehavior(LoginBehavior):
         if not check_password_length(self.password):
             return self.show_error('Password must contain at least 8 characters')
         try:
-            self.get_client().register(self.username, self.password)
+            self.client.register(self.username, self.password)
         except CommonPasswordError:
             return self.show_error('This password is too common')
         except UserExistsError:
