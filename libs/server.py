@@ -1,11 +1,11 @@
 import asyncio
 import requests
-from libs.exceptions import CommonPasswordError, NotFoundError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
+from libs.exceptions import CommonPasswordError, InvalidDisplayNameError, InvalidStatusError, NotFoundError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
 from pathlib import Path
 import websockets
 import json
 
-from libs.models import ChatAPIModel, UserModel, createChatAPI, createUser
+from libs.models import ChatAPIModel, MessageModel, UserModel, createChatAPI, createMessage, createUser
 from settings import SERVER_URL
 
 #SERVER_URL = "https://connection-net.herokuapp.com"
@@ -245,11 +245,11 @@ class Client():
         raise AccessError(r.text)
     
     @requiredAuthorization
-    def getMe(self) -> dict:
+    def getMe(self) -> UserModel:
         url = URL + 'user'
         r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
-            return r.json()
+            return createUser(r.json())
         elif r.status_code == 204:
             raise ServerError(f'Server exception 204: {r.text}')
         elif r.status_code == 400:
@@ -269,23 +269,6 @@ class Client():
             raise ServerError(f'Server exception 400: {r.text}')
         elif r.status_code == 500:
             raise ServerError(f'Server exception 500: Пользователь с таким именем не найден')
-        raise AccessError(r.text)
-    
-    @requiredAuthorization
-    def change_username(self, username: str):
-        if not isinstance(username, str):
-            raise ValueError("Expected username:str")
-        url = URL + 'user'
-        data = {
-            'username': username
-        }
-        r = requests.put(url=url, headers=self.headers, data=data)
-        if r.status_code == 200:
-            result = r.json()
-            error = result.get("error", None)
-            if error:
-                raise ValueError(error)
-            return result
         raise AccessError(r.text)
 
     @requiredAuthorization
@@ -307,6 +290,30 @@ class Client():
         raise AccessError(r.text)
 
     @requiredAuthorization
+    def change_user_data(self, data: dict):
+        if not (data.get("display_name") or data.get("status")):
+            raise ValueError("Expected display_name or status")
+        url = URL + 'user'
+        params = {}
+        if data.get("display_name"):
+            params['display_name'] = data['display_name']
+        if data.get("status"):
+            params['status'] = data['status']
+        
+        r = requests.put(url=url, headers=self.headers, data=params)
+        result = r.json()
+        if r.status_code == 200:
+            return result
+        elif r.status_code == 400:
+            if result.get("error"):
+                raise ServerError(result.get("error"))
+            if result.get("display_name"):
+                raise InvalidDisplayNameError(result.get("display_name"))
+            if result.get("status"):
+                raise InvalidStatusError(result.get("status"))
+        raise AccessError(r.text)
+
+    @requiredAuthorization
     def getuserlist(self) -> dict:
         url = URL + 'userList'
         r = requests.get(url=url, headers=self.headers)
@@ -319,7 +326,7 @@ class Client():
         raise AccessError(r.text)
     
     @requiredAuthorization
-    def getmessagelist(self, chat_id: str, part: str) -> dict:
+    def getmessagelist(self, chat_id: str, part: str) -> list[MessageModel]:
         print("request")
         if not isinstance(chat_id, str):
             raise ValueError("Expected chat_id:str")
@@ -339,11 +346,14 @@ class Client():
             error = result.get("error", None)
             if error:
                 raise ValueError(error)
-            return result
+            resp = []
+            for msg in result['messages']:
+                resp.append(createMessage(msg))
+            return resp
         raise AccessError(r.text)
 
     @requiredAuthorization
-    def sendmessage(self, chat_id: str, text):
+    def sendmessage(self, chat_id: str, text) -> MessageModel:
         if not isinstance(chat_id, str):
             raise ValueError("Expected chat_id:str")
 
@@ -359,7 +369,7 @@ class Client():
             error = result.get("error", None)
             if error:
                 raise ValueError(error)
-            return result
+            return createMessage(result)
         raise AccessError(r.text)
 
     @requiredAuthorization

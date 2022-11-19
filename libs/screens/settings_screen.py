@@ -10,6 +10,7 @@ from libs.utils.behaviors import GetApp
 from libs.components.snackbar import show_error_snackbar, show_success_snackbar
 from kivymd.uix.filemanager import MDFileManager
 from libs.utils.checks import is_image
+from libs.exceptions import InvalidDisplayNameError, InvalidStatusError
 
 class MyToggleButton(MDFlatButton, MDToggleButton):
     def __init__(self, *args, **kwargs):
@@ -47,11 +48,23 @@ class SettingsBehavior(GetApp):
         )
         Clock.schedule_once(self.bind_components, 1)
     
-    def change_data(self, instance):
-        print(instance.text)
+    def change_status(self, instance):
+        if instance.text != "":
+            try:
+                self.app.change_user_data({'status': instance.text})
+            except InvalidStatusError:
+                show_error_snackbar("Статус введён некорректно")
+            else:
+                show_success_snackbar("Статус успешно измененён")
     
     def change_display_name(self, instance):
-        print(instance.text)
+        if instance.text != "":
+            try:
+                self.app.change_user_data({'display_name': instance.text})
+            except InvalidDisplayNameError:
+                show_error_snackbar("Имя введено некорректно")
+            else:
+                show_success_snackbar("Имя успешно изменено")
 
     def change_font_size(self, instance):
         font_size = instance.text
@@ -71,7 +84,7 @@ class SettingsBehavior(GetApp):
             on_press=self.change_avatar
         )
         self.ids.base.ids.status.bind(
-            on_text_validate=self.change_data
+            on_text_validate=self.change_status
         )
         self.ids.base.ids.display_name.bind(
             on_text_validate=self.change_display_name

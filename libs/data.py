@@ -1,5 +1,5 @@
 from libs.chat import Chat
-from libs.exceptions import ServerError
+from libs.exceptions import AccessError, InvalidDisplayNameError, InvalidStatusError, ServerError
 from libs.message import Message
 from libs.models import *
 from libs.user import User
@@ -17,35 +17,56 @@ class Data():
     
     client: Client
     app: MDApp
-    self_user: User = None
-    #данные для контактов, зеркало для display_viewset
+    self_user: UserModel = None
+
     contacts: list[ChatModel] = ListProperty([])
-    #те данные, которые должны отображаться в данный момент
+    """
+    contacts - список чатов, в каждом из которых находятся данные типа ChatModel
+    нужен для того, чтобы брать оттуда информацию из отрендеренных чатов
+    """
+    
     display_viewset: list[dict[Union[ChatViewModel, ContactViewModel]]] = ListProperty([])
+    """
+    display_viewset - список отображаемых элементов в данный момент,
+    при изменении списка - меняется набор отображаемых элементов в live режиме,
+    для работы каждый элемент обращается к contacts
+    """
+    
     #сохранённые данные контактов
     contacts_viewset: list[dict[Union[ChatViewModel, ContactViewModel]]] = ListProperty([])
-    contacts_loaded: bool = False
+    """
+    contacts_viewset - список готовых наборов данных для отображения контактов в формате словаря
+    """
     messages = ListProperty([])
+    """
+    messages - список отображаемых сообщений
+    """
+    contacts_loaded: bool = False
     chats = {}
     selected_chat_id = StringProperty("")
     current_destination_username = StringProperty("")
     current_destination_avatar_url = StringProperty("assets/icons/user.png")
-    current_username = StringProperty("TheLastPapr1ka")
+    
+    #о нас
+    current_username = StringProperty("")
+    current_display_name = StringProperty("")
+    current_status = StringProperty("")
     current_avatar_url = StringProperty("assets/icons/user.png")
     current_date_created = StringProperty("Now")
+    
     connection: MyKivyClientFactory
 
     def on_login(self):
         print("on_login")
         self.self_user = self.get_self_user()
         self.current_username = self.self_user.username
-        self.current_avatar_url = self.self_user.avatar_url
-        self.current_date_created = self.self_user.date_created.strftime("%d:%m:%Y")
+        self.current_avatar_url = self.self_user.avatar_image
+        print(self.self_user.date_joined)
+        self.current_date_created = self.self_user.date_joined.strftime("%d:%m:%Y")
+        self.current_display_name = self.self_user.display_name
+        self.current_status = self.self_user.status
         self.load_contacts()
         self.show_contacts()
-        print(self.contacts)
-        print(self.contacts_viewset)
-        print(self.display_viewset)
         self.app = MDApp.get_running_app()
         # self.connection = MyKivyClientFactory("ws://127.0.0.1:8000/ws/messages/?token=0d2fbbd2e568294cd3b95471388275e300e51a93", self.app)
         # reactor.connectTCP('127.0.0.1', 8000, self.app._factory)
@@ -69,18 +90,32 @@ class Data():
     def search_contacts(self, username: str):
         try:
             users: list[UserModel] = self.client.searchUsers(username)
-        except ServerError:
-            viewset = []
+        except (ServerError, AccessError):
+            self.display_viewset.clear()
         else:
-            viewset = [asdict(createContact(user)) for user in users]
-        self.display_viewset.clear()
-        self.display_viewset = viewset
+            viewset = []
+            for user in users:
+                exists = False
+                for contact in self.contacts:
+                    if contact.users[-1] == user.id:
+                        viewset.append(asdict(createChatView(contact)))
+                        exists = True
+                        break
+                if not exists:
+                    viewset.append(asdict(createContact(user)))
+            
+            self.display_viewset.clear()
+            self.display_viewset = viewset
         print("обновил")
+        print(self.display_viewset)
     
     def show_contacts(self):
+        """
+        Показывает контакты
+        Заменяет данные из display_viewset на данные из contacts_viewset
+        """
         self.display_viewset.clear()
         self.display_viewset = self.contacts_viewset
-        print(self.display_viewset)
     
     def create_chat(self, user_id: int):
         print(user_id)
@@ -97,54 +132,82 @@ class Data():
             else:
                 chat = ChatModel(chat.id, chat.messages, chat.created_at, chat.users, user.username, user.id, "", user.avatar_image)
                 self.contacts.insert(0, chat)
-                self.contacts_viewset.insert(0, asdict(createChatView(chat)))
-                self.show_contacts()
+                view = asdict(createChatView(chat))
+                self.contacts_viewset.insert(0, view)
+                old_contact = self.find_display_view_by_chat_id(user_id)
+                self.display_viewset.remove(old_contact)
+                self.display_viewset.insert(0, view)
                 self.on_chat_switch(str(chat.id))
 
     def get_self_user(self):
         if self.self_user is None:
-            data = self.client.getMe()
-            self.self_user = User().from_data(data)
+            self.self_user = self.client.getMe()
             return self.self_user
         return self.self_user
     
     def load_contacts(self):
-        if not self.contacts_loaded:
+        """
+        Получает список контактов с сервера, загружает модели ChatModel в список contacts, ChatModelView в список contacts_viewset
+        """
+        try:
             data = self.client.getcontacts()['chats']['chats']
+        except ServerError:
+            print("ошибка сервера")
+        except AccessError:
+            print("ошибка доступа")
+        except Exception as E:
+            print("ошибка", E)
+        else:
             self.contacts.clear()
             for chat in data:
                 chat_model = createChat(chat)
                 self.contacts.append(chat_model)
                 self.contacts_viewset.append(asdict(createChatView(chat_model)))
-            self.contacts_loaded = True
     
     def get_messages(self, chat_id: str):
+        """
+        Получает список сообщений для чата с id - chat_id, если история сообщений существует, загружает с неё, если нет - с сервера
+        """
         story_exists = self.chats.get(chat_id, None)
         if not story_exists:
-            messages = self.client.getmessagelist(chat_id, '1')['messages']
-            for i in messages:
-                self.add_message({'text': i['text']}, from_me=False if str(self.get_self_user().id) != i['author_id'] else True)
+            messages = self.client.getmessagelist(chat_id, '1')
+            for message in messages:
+                self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True)
         else:
             self.messages = self.chats[chat_id]
     
-    def find_contact_by_chat_id(self, chat_id):
-        for i in self.contacts:
-            if str(i.id) == chat_id:
-                return i
+    def find_contact_by_chat_id(self, chat_id) -> ChatModel:
+        for chat_model in self.contacts:
+            if chat_model.id.__str__() == chat_id:
+                return chat_model
 
     def find_contact_view_by_chat_id(self, chat_id):
         for i in self.contacts_viewset:
             if i['id'] == chat_id:
                 return i
     
+    def find_display_view_by_chat_id(self, chat_id):
+        for i in self.display_viewset:
+            if i['id'] == chat_id:
+                return i
+    
     def on_chat_switch(self, chat_id: str):
+        """
+        Меняет название для выбранного чата, id выбранного чата, загружает список сообщений для выбранного чата
+        """
         print("on_chat_switch")
         self.selected_chat_id = chat_id
-        self.current_destination_username = self.find_contact_by_chat_id(self.selected_chat_id).destination_username
+        self.current_destination_username = self.find_contact_by_chat_id(chat_id).destination_username
         self.messages = []
         self.get_messages(chat_id)
     
-    def add_message(self, data: dict, from_me=True):
+    def add_message(self, content: str, from_me=True):
+        """
+        Добавляет сообщение в список отображаемых сообщений, сохраняет в словарь сохранённых сообщений
+        """
+        data = {
+            'text': content
+        }
         if from_me:
             data.update({'pos_hint': {'right': 1}, 'halign': 'right', 'send_by_user': True})
         else:
@@ -156,6 +219,9 @@ class Data():
         self.story_message(data)
     
     def story_message(self, data: dict):
+        """
+        Добавляет данные для отображения сообщения в конкретный чат
+        """
         if self.selected_chat_id != '':
             story_exists = self.chats.get(self.selected_chat_id, None)
             if not story_exists:
@@ -163,25 +229,54 @@ class Data():
             self.chats[self.selected_chat_id].append(data)
     
     def send_message(self, message: str):
+        """
+        Если выбран чат, отправляет сообщение на сервер,
+        добавляет в список сообщений для чата на стороне клиента,
+        заменяет последнее сообщение в чате с пользователем на новое
+        """
         if self.selected_chat_id != '':
-            data = self.client.sendmessage(self.selected_chat_id, message)
-            msg = Message().from_data(data)
-            self.add_message({'text': message}, from_me=True)
+            msg = self.client.sendmessage(self.selected_chat_id, message)
+            self.add_message(message, from_me=True)
+            
             self.change_chat_last_message(msg, self.selected_chat_id)
     
-    def change_chat_last_message(self, message: Message, chat_id):
+    def change_chat_last_message(self, message: MessageModel, chat_id):
+        """
+        Если найден контакт, обновляет у него последнее сообщение и переводит вверх списка контактов в contacts_viewset
+        """
         contact = self.find_contact_by_chat_id(chat_id)
         if contact:
             contact.last_message = message
-            self.contacts_viewset.remove(self.find_contact_view_by_chat_id(chat_id))
-            self.contacts_viewset.insert(0, asdict(createChatView(contact)))
-
-    def change_username(self, username):
-        self.client.change_username(username)
-        self.current_username = username
+            old_contact = self.find_contact_view_by_chat_id(chat_id)
+            new_contact = asdict(createChatView(contact))
+            self.contacts_viewset.remove(old_contact)
+            self.contacts_viewset.insert(0, new_contact)
+            self.display_viewset.remove(old_contact)
+            self.display_viewset.insert(0, new_contact)
 
     def change_avatar(self, path_to_image):
         self.client.change_avatar(path_to_image)
         self.self_user = None
         self.self_user = self.get_self_user()
         self.current_avatar_url = self.self_user.avatar_url
+
+    def get_user(self, user_id) -> Union[UserModel, None]:
+        try:
+            user = self.client.getuser(str(user_id))
+        except (ServerError, AccessError):
+            print("Не удалось найти пользователя")
+        else:
+            return user
+    
+    def change_user_data(self, data: dict):
+        display_name_changed = data.get("display_name")
+        status_changed = data.get("status")
+        try:
+            self.client.change_user_data(data)
+        except (ServerError, AccessError):
+            print("Не удалось обновить информацию")
+        else:
+            if display_name_changed:
+                self.current_display_name = display_name_changed
+            if status_changed:
+                self.current_status = status_changed

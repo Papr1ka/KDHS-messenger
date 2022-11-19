@@ -18,3 +18,9 @@ class NotAutirizedError(Exception):
 
 class NotFoundError(Exception):
     pass
+
+class InvalidStatusError(Exception):
+    pass
+
+class InvalidDisplayNameError(Exception):
+    pass

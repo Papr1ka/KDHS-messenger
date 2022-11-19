@@ -1,14 +1,13 @@
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import List, Union
-from settings import SERVER_URL
 
 
 @dataclass
 class UserModel:
     id: int
     username: str
-    date_joined: str
+    date_joined: datetime
     avatar_image: str
     status: str
     display_name: str
@@ -18,16 +17,15 @@ def createUser(data: dict) -> UserModel:
         id=data['id'],
         username=data['user']['username'],
         date_joined=datetime.fromisoformat(data['user']['date_joined'][:-1]+ "+00:00").astimezone(),
-        avatar_image=SERVER_URL + data['avatar_image'] if data['avatar_image'] else "assets/icons/user.png",
+        avatar_image=data['avatar_image'] if data['avatar_image'] else "assets/icons/user.png",
         status=data['status'],
-        display_name=data['display_name']        
+        display_name=data['display_name']
     )
     return user
 
 
 @dataclass
 class MessageModel():
-    
     id: int
     author_id: str
     created_at: datetime
@@ -77,7 +75,7 @@ def createChat(data: dict):
         destination_id=data['users'][0]['id'],
         last_message=None if data['last_message'] == [] else createMessage(data['last_message'][0]),
         messages=data['messages'],
-        avatar_url=SERVER_URL + data['users'][0]['avatar_image'] if data['users'][0]['avatar_image'] else "assets/icons/user.png",
+        avatar_url=data['users'][0]['avatar_image'] if data['users'][0]['avatar_image'] else "assets/icons/user.png",
         users=[i['id'] for i in data['users']]
     )
     return chat
@@ -98,7 +96,7 @@ class ChatViewModel(ContactViewModel):
     chat_id: Union[str, None]
 
 
-def createContact(user: UserModel):
+def createContact(user: UserModel) -> ChatViewModel:
     contact_view = ChatViewModel(
         id=str(user.id),
         text=user.username,
@@ -111,7 +109,7 @@ def createContact(user: UserModel):
     return contact_view
 
 
-def createChatView(chat: ChatModel):
+def createChatView(chat: ChatModel) -> ChatViewModel:
     chat_view = ChatViewModel(
         id=str(chat.id),
         text=chat.destination_username,

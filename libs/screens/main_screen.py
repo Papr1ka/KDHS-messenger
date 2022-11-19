@@ -10,6 +10,7 @@ from kivy.clock import Clock
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 from kivy.metrics import dp
+from kivymd.uix.toolbar import MDTopAppBar
 
 from libs.components.profile_popup import ProfilePopup
 from libs.components.text_input_round import TextInputRound, TextInputString
@@ -17,8 +18,14 @@ from libs.components.chat_bubble import ChatBubble
 from libs.components.listitem import ChatListItem
 from libs.exceptions import ServerError
 from libs.utils.behaviors import GetApp
-from libs.components.chat_create_popup import ChatCreatePopup
 from libs.models import *
+
+
+class Bar(MDTopAppBar, GetApp):
+    def on_touch_down(self, touch):
+        print(self.app.current_destination_username)
+        if self.collide_point(touch.x, touch.y):
+            print(self.app.current_destination_username)
 
 
 class ChatItem(ChatListItem):
@@ -71,57 +78,29 @@ class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
     back_color = ColorProperty((0, 0, 0, 1))
     header_head = StringProperty("")
     icon_source = StringProperty("")
-    dialog_username = None
-    dialog_chat = None
     
     def sign_out(self):
         self.app.screen_manager.switch_screen("login_screen")
         self.app.on_sign_out()
     
     
-    def show_username_change_dialog(self, *args):
+    def show_profile_dialog(self, *args):
         
         popup = ProfilePopup(
             avatar_url=self.app.current_avatar_url,
-            display_name="Кирилл",
+            display_name=self.app.current_display_name,
             username=self.app.current_username,
-            status="Бог"
+            status=self.app.current_status
         )
         
-        if not self.dialog_username:
-            self.dialog_username = MDDialog(
-                md_bg_color=self.app.colors["SearchColor"],
-                title="Информация",
-                type="custom",
-                content_cls=popup,
-                width_offset=0,
-            )
-        self.dialog_username.open()
-
-
-    def show_chat_create_dialog(self):
-        if not self.dialog_chat:
-            self.dialog_chat = MDDialog(
-                title="Address:",
-                type="custom",
-                content_cls=ChatCreatePopup(),
-                buttons=[
-                    MDFlatButton(
-                        text="Отменить",
-                        theme_text_color="Custom",
-                        text_color=self.app.colors["MainColor"],
-                        radius=[dp(18)]
-                    ),
-                    MDFlatButton(
-                        text="Найти",
-                        theme_text_color="Custom",
-                        text_color=self.app.colors["MainColor"],
-                        radius=[dp(18)],
-                        on_release=self.find_user
-                    ),
-                ],
-            )
-        self.dialog_chat.open()
+        dialog = MDDialog(
+            md_bg_color=self.app.colors["SearchColor"],
+            title="Информация",
+            type="custom",
+            content_cls=popup,
+            width_offset=0,
+        )
+        dialog.open()
     
     def find_user(self, *args):
         print(args)
@@ -154,6 +133,7 @@ class MainDesktopView(MDScreen, MainContactEventBehavior):
 
 class MessagesBehavior(GetApp):
     messages: list = []
+    dialog = None
     
     def send_from_button(self, button):
         self.send_message(button.parent.textinput)
@@ -177,6 +157,30 @@ class MessagesBehavior(GetApp):
             on_press=self.send_from_button
         )
         self.ids.messages_rv.data = self.messages
+    
+    
+    def show_user_profile(self):
+        chat = self.app.find_contact_by_chat_id(self.app.selected_chat_id)
+        user: Union[UserModel, None] = self.app.get_user(chat.users[-1])
+        if user:
+            print(user)
+        
+            popup = ProfilePopup(
+                avatar_url=user.avatar_image,
+                display_name=user.display_name,
+                username=user.username,
+                status=user.status if user.status != "" else "Всем привет, я использую WhatsApp!",
+            )
+            
+            dialog = MDDialog(
+                    md_bg_color=self.app.colors["SearchColor"],
+                    title="Информация",
+                    type="custom",
+                    content_cls=popup,
+                    width_offset=0,
+                )
+            dialog.open()
+        
 
 
 class MessagesLayout(RelativeLayout, MDAdaptiveWidget, MessagesBehavior):
