@@ -1,23 +1,26 @@
-from libs.chat import Chat
-from libs.exceptions import AccessError, InvalidDisplayNameError, InvalidStatusError, ServerError
-from libs.message import Message
+from functools import partial
+from libs.exceptions import AccessError, InvalidDisplayNameError, InvalidStatusError, ServerError, NotAutirizedError
+from requests.exceptions import RequestException
 from libs.models import *
-from libs.user import User
+from libs.snackcontroller import Controller
 from libs.server import Client
+from libs.utils.window import get_window_type
+from libs.components.snackbar import show_error_snackbar, show_success_snackbar
 from kivymd.app import MDApp
 from kivy.properties import ObjectProperty, ListProperty, StringProperty, NumericProperty
-from libs.utils.window import get_window_type
 from kivy.uix.label import Label
-from libs.utils.protocols import MyKivyClientFactory
-from twisted.internet import reactor
 from kivymd.app import MDApp
+from logging import Logger
 
+BaseExceptions = (ServerError, AccessError, RequestException, NotAutirizedError)
 
 class Data():
     
     client: Client
+    controller: Controller
     app: MDApp
     self_user: UserModel = None
+    Logger: Logger = None
 
     contacts: list[ChatModel] = ListProperty([])
     """
@@ -53,12 +56,13 @@ class Data():
     current_status = StringProperty("")
     current_avatar_url = StringProperty("assets/icons/user.png")
     current_date_created = StringProperty("Now")
-    
-    connection: MyKivyClientFactory
 
     def on_login(self):
         print("on_login")
-        self.self_user = self.get_self_user()
+        try:
+            self.self_user = self.get_self_user()
+        except BaseExceptions:
+            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
         self.current_username = self.self_user.username
         self.current_avatar_url = self.self_user.avatar_image
         print(self.self_user.date_joined)
@@ -68,10 +72,22 @@ class Data():
         self.load_contacts()
         self.show_contacts()
         self.app = MDApp.get_running_app()
-        # self.connection = MyKivyClientFactory("ws://127.0.0.1:8000/ws/messages/?token=0d2fbbd2e568294cd3b95471388275e300e51a93", self.app)
-        # reactor.connectTCP('127.0.0.1', 8000, self.app._factory)
-        # print("connected")
 
+    def login(self, username, password):
+        try:
+            self.client.autorize(username, password)
+        except (ServerError, RequestException):
+            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            return False
+        return True
+
+    def register(self, username, password):
+        try:
+            self.client.register(username, password)
+        except (ServerError, RequestException):
+            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            return False
+        return True
 
     def on_sign_out(self):
         print("on_sign_out")
@@ -90,8 +106,9 @@ class Data():
     def search_contacts(self, username: str):
         try:
             users: list[UserModel] = self.client.searchUsers(username)
-        except (ServerError, AccessError):
+        except BaseExceptions:
             self.display_viewset.clear()
+            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
         else:
             viewset = []
             for user in users:
@@ -122,13 +139,13 @@ class Data():
         print("create chat")
         try:
             chat = self.client.createchat(str(user_id))
-        except Exception as E:
-            print("Не судьба", E)
+        except BaseExceptions:
+            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
         else:
             try:
                 user = self.client.getuser(str(user_id))
-            except Exception as E:
-                print("Не удалось найти пользователя", E)
+            except BaseExceptions:
+                self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
             else:
                 chat = ChatModel(chat.id, chat.messages, chat.created_at, chat.users, user.username, user.id, "", user.avatar_image)
                 self.contacts.insert(0, chat)
@@ -151,12 +168,10 @@ class Data():
         """
         try:
             data = self.client.getcontacts()['chats']['chats']
-        except ServerError:
-            print("ошибка сервера")
-        except AccessError:
-            print("ошибка доступа")
+        except BaseExceptions:
+            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
         except Exception as E:
-            print("ошибка", E)
+            self.controller.show(partial(show_error_snackbar, "Ошибка"), 2)
         else:
             self.contacts.clear()
             for chat in data:
@@ -170,7 +185,11 @@ class Data():
         """
         story_exists = self.chats.get(chat_id, None)
         if not story_exists:
-            messages = self.client.getmessagelist(chat_id, '1')
+            try:
+                messages = self.client.getmessagelist(chat_id, '1')
+            except BaseExceptions:
+                messages = []
+                self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
             for message in messages:
                 self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True)
         else:
@@ -253,6 +272,16 @@ class Data():
             self.contacts_viewset.insert(0, new_contact)
             self.display_viewset.remove(old_contact)
             self.display_viewset.insert(0, new_contact)
+    
+    def on_message(self, message: MessageModel):
+        """
+        Получает входящие сообщения в лайв режиме
+        """
+        if str(message.chat_id) == self.selected_chat_id:
+            self.add_message(message.text, from_me=False)
+    
+    def on_user_changed(self, data: dict):
+        print("я не хочу эту поеботу обрабатывать", data)
 
     def change_avatar(self, path_to_image):
         self.client.change_avatar(path_to_image)
@@ -263,8 +292,8 @@ class Data():
     def get_user(self, user_id) -> Union[UserModel, None]:
         try:
             user = self.client.getuser(str(user_id))
-        except (ServerError, AccessError):
-            print("Не удалось найти пользователя")
+        except BaseExceptions:
+            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
         else:
             return user
     
@@ -273,8 +302,8 @@ class Data():
         status_changed = data.get("status")
         try:
             self.client.change_user_data(data)
-        except (ServerError, AccessError):
-            print("Не удалось обновить информацию")
+        except BaseExceptions:
+            self.controller.show(partial(show_error_snackbar, "Не удалось обновить информацию"), 2)
         else:
             if display_name_changed:
                 self.current_display_name = display_name_changed

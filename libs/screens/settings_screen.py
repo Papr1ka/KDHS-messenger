@@ -1,3 +1,4 @@
+from functools import partial
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.responsivelayout import MDResponsiveLayout
 from kivymd.uix.relativelayout import MDRelativeLayout
@@ -29,9 +30,9 @@ class SettingsBehavior(GetApp):
         self.exit_manager()
         if is_image(path):
             self.app.change_avatar(path)
-            show_success_snackbar("Изображение успешно изменено")
+            self.app.controller.show(partial(show_success_snackbar, "Изображение успешно изменено"), 2)
         else:
-            show_error_snackbar("Изображение/Файл не поддерживается")
+            self.app.controller.show(partial(show_error_snackbar, "Изображение/Файл не поддерживается"), 2)
     
     def change_avatar(self, button):
         self.file_manager.show(self.path)
@@ -53,31 +54,31 @@ class SettingsBehavior(GetApp):
             try:
                 self.app.change_user_data({'status': instance.text})
             except InvalidStatusError:
-                show_error_snackbar("Статус введён некорректно")
+                self.app.controller.show(partial(show_error_snackbar, "Статус введён некорректно"), 2)
             else:
-                show_success_snackbar("Статус успешно измененён")
+                self.app.controller.show(partial(show_success_snackbar, "Статус успешно измененён"), 2)
     
     def change_display_name(self, instance):
         if instance.text != "":
             try:
                 self.app.change_user_data({'display_name': instance.text})
             except InvalidDisplayNameError:
-                show_error_snackbar("Имя введено некорректно")
+                self.app.controller.show(partial(show_error_snackbar, "Имя введено некорректно"), 2)
             else:
-                show_success_snackbar("Имя успешно изменено")
+                self.app.controller.show(partial(show_success_snackbar, "Имя успешно изменено"), 2)
 
     def change_font_size(self, instance):
         font_size = instance.text
         try:
             font_size = int(font_size)
         except (TypeError, ValueError):
-            show_error_snackbar("Шрифт должен быть от 12 до 40")
+            self.app.controller.show(partial(show_error_snackbar, "Шрифт должен быть от 12 до 40"), 2)
         else:
             if 12 <= font_size <= 40:
                 self.app.change_font_size(font_size)
-                show_success_snackbar("Шрифт успешно изменён")
+                self.app.controller.show(partial(show_success_snackbar, "Шрифт успешно изменён"), 2)
             else:
-                show_error_snackbar("Шрифт должен быть от 12 до 40")
+                self.app.controller.show(partial(show_error_snackbar, "Шрифт должен быть от 12 до 40"), 2)
     
     def bind_components(self, tm):
         self.ids.base.ids.avatar.bind(
