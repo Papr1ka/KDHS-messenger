@@ -5,7 +5,7 @@ from pathlib import Path
 import websockets
 import json
 
-from libs.models import ChatAPIModel, MessageModel, UserModel, createChatAPI, createMessage, createUser
+from libs.models import ChatAPIModel, MessageModel, UserModel, createChatAPI, createMessage, createSelfUser, createUser
 from settings import SERVER_URL
 from libs.websocket import *
 from settings import Logger
@@ -146,9 +146,18 @@ class Client(GetApp):
         return wrapper
             
     @requiredAuthorization
-    def getcontacts(self) -> dict:
+    def getcontacts(self, size: int = 0) -> dict:
+        """
+        size: если нужно получить лишь последние несколько контактов
+        """
         url = URL + 'chatList'
-        r = requests.get(url=url, headers=self.headers)
+        if size > 0:
+            data = {
+                'size': size
+            }
+            r = requests.get(url=url, headers=self.headers, json=data)
+        else:
+            r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
             return r.json()
         elif r.status_code == 204:
@@ -189,7 +198,7 @@ class Client(GetApp):
         url = URL + 'user'
         r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
-            return createUser(r.json())
+            return createSelfUser(r.json())
         elif r.status_code == 204:
             raise ServerError(f'Server exception 204: {r.text}')
         elif r.status_code == 400:

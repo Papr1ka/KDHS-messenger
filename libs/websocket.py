@@ -39,7 +39,9 @@ class AppWebsocketClientProtocol(WebSocketClientProtocol):
                         self.factory.app.on_message(message)
                 elif data['event'] == 'on_user_state_change':
                     """Эвент, когда НАС кто-то поменял, основное событие - с нами создали новый чат"""
-                    self.factory.app.on_user_changed(data)
+                    if self.factory.app.check_new_chats(data):
+                        self.onOpen()
+                    
 
     def onClose(self, wasClean, code, reason):
         Logger.error(f"{name}: WebSocket connection closed {reason}")

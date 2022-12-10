@@ -75,7 +75,7 @@ class SettingsBehavior(GetApp):
             self.app.controller.show(partial(show_error_snackbar, "Шрифт должен быть от 12 до 40"), 2)
         else:
             if 12 <= font_size <= 40:
-                self.app.change_font_size(font_size)
+                self.app.font_size = font_size
                 self.app.controller.show(partial(show_success_snackbar, "Шрифт успешно изменён"), 2)
             else:
                 self.app.controller.show(partial(show_error_snackbar, "Шрифт должен быть от 12 до 40"), 2)

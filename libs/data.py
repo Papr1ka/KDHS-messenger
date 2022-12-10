@@ -11,6 +11,7 @@ from kivy.properties import ObjectProperty, ListProperty, StringProperty, Numeri
 from kivy.uix.label import Label
 from kivymd.app import MDApp
 from logging import Logger
+from libs.notify import notify
 
 BaseExceptions = (ServerError, AccessError, RequestException, NotAutirizedError)
 
@@ -179,6 +180,19 @@ class Data():
                 self.contacts.append(chat_model)
                 self.contacts_viewset.append(asdict(createChatView(chat_model)))
     
+    def post_load_contacts(self, size: int):
+        try:
+            data = self.client.getcontacts(size)['chats']['chats']
+        except BaseExceptions:
+            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+        except Exception as E:
+            self.controller.show(partial(show_error_snackbar, "Ошибка"), 2)
+        else:
+            for chat in data:
+                chat_model = createChat(chat)
+                self.contacts.insert(0, (chat_model))
+                self.contacts_viewset.insert(0, asdict(createChatView(chat_model)))
+    
     def get_messages(self, chat_id: str):
         """
         Получает список сообщений для чата с id - chat_id, если история сообщений существует, загружает с неё, если нет - с сервера
@@ -224,6 +238,16 @@ class Data():
         """
         Добавляет сообщение в список отображаемых сообщений, сохраняет в словарь сохранённых сообщений
         """
+        
+        data = self.generate_message_view(content, from_me)
+        
+        self.messages.append(data)
+        self.story_message(data)
+    
+    def generate_message_view(self, content: str, from_me=True):
+        """
+        Возвращает словарь для представления сообщения
+        """
         data = {
             'text': content
         }
@@ -234,18 +258,18 @@ class Data():
         l = Label(text=data['text'], markup=False)
         l.texture_update()
         data.update({'max_text_width': l.texture_size[0] * 1.08})
-        self.messages.append(data)
-        self.story_message(data)
+        return data
     
-    def story_message(self, data: dict):
+    def story_message(self, data: dict, chat_id=None):
         """
         Добавляет данные для отображения сообщения в конкретный чат
         """
-        if self.selected_chat_id != '':
-            story_exists = self.chats.get(self.selected_chat_id, None)
+        current_chat_id = chat_id if chat_id is not None else self.selected_chat_id
+        if current_chat_id != '':
+            story_exists = self.chats.get(current_chat_id, None)
             if not story_exists:
-                self.chats[self.selected_chat_id] = []
-            self.chats[self.selected_chat_id].append(data)
+                self.chats[current_chat_id] = []
+            self.chats[current_chat_id].append(data)
     
     def send_message(self, message: str):
         """
@@ -279,9 +303,34 @@ class Data():
         """
         if str(message.chat_id) == self.selected_chat_id:
             self.add_message(message.text, from_me=False)
+        else:
+            data = self.generate_message_view(message.text, from_me=False)
+            self.story_message(data, str(message.chat_id))
+            notify(self.find_contact_by_chat_id(str(message.chat_id)).destination_username, message.text)
+        self.change_chat_last_message(message, str(message.chat_id))
+            
     
-    def on_user_changed(self, data: dict):
+    def check_new_chats(self, data: dict):
+        """
+        сюда приходит обновлённый пользотель (наш пользователь) (мы)
+        если есть новые чаты, возвращаем true
+        """
         print("я не хочу эту поеботу обрабатывать", data)
+        user = self.get_self_user()
+        if data.get('data'):
+            data = data['data']
+        
+        if data['chats']:
+            new_chat_length = len(data['chats'])
+            old_chat_length = len(user.chats)
+            if new_chat_length > old_chat_length:
+                for i in range(new_chat_length - 1, old_chat_length - 1, -1):
+                    self.self_user.chats.append(data['chats'][i]['id'])
+                self.post_load_contacts(new_chat_length - old_chat_length)
+                self.show_contacts()
+                return True
+        return False
+                
 
     def change_avatar(self, path_to_image):
         self.client.change_avatar(path_to_image)

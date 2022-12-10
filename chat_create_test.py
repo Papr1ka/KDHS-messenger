@@ -17,4 +17,15 @@ data = {
 }
 
 r = requests.post(url=url, headers=headers, data=data)
+
+data = {
+    'chat_id': str(r.json()['id']),
+    'text': "cbvnvbnvbn"
+}
+
+url = "http://127.0.0.1:8000/api/v1/messages"
+
+r = requests.post(url=url, headers=headers, data=data)
+r = requests.post(url=url, headers=headers, data=data)
+
 print(r.text)
