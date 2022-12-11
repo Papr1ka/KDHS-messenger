@@ -19,6 +19,7 @@ from libs.components.listitem import ChatListItem
 from libs.exceptions import ServerError
 from libs.utils.behaviors import GetApp
 from libs.models import *
+from threading import Thread
 
 
 class Bar(MDTopAppBar, GetApp):
@@ -33,12 +34,8 @@ class ChatItem(ChatListItem):
     def on_touch_down(self, touch):
         if self.app and self.collide_point(touch.x, touch.y):
             self.open_messages()
-            print(self.text)
-            print(self.chat_id)
     
     def open_messages(self):
-        print(self.__dict__)
-        print(self.viewclass)
         screen = self.app.screen_manager.adaptive_switch_screen('messages_screen', self.app.root)
         try:
             self.app.on_chat_switch(self.chat_id)
@@ -103,7 +100,6 @@ class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
         dialog.open()
     
     def find_user(self, *args):
-        print(args)
         if self.dialog_chat:
             username = self.dialog_chat.content_cls.ids.username.text
             try:
@@ -134,6 +130,7 @@ class MainDesktopView(MDScreen, MainContactEventBehavior):
 class MessagesBehavior(GetApp):
     messages: list = []
     dialog = None
+    refreshing = False
     
     def send_from_button(self, button):
         self.send_message(button.parent.textinput)
@@ -148,6 +145,9 @@ class MessagesBehavior(GetApp):
         super().__init__(**kw)
         Clock.schedule_once(self.bind_components, 1)
     
+    def test(self, *args):
+        print(args)
+    
     def bind_components(self, x):
         self.messages = self.app.messages
         self.ids.text_input.textinput.bind(
@@ -157,7 +157,28 @@ class MessagesBehavior(GetApp):
             on_press=self.send_from_button
         )
         self.ids.messages_rv.data = self.messages
+        self.ids.messages_rv.bind(
+            on_scroll_stop=self.check_pull_refresh
+        )
     
+    def check_pull_refresh(self, rv, event):
+        if rv.collide_point(event.x, event.y):
+            view = self.ids.messages_rv
+            box = self.ids.rm_box
+            max_pixel = 120
+            to_relative = max_pixel / (box.height - view.height)
+            if view.scroll_y < 1.0 + to_relative or self.refreshing:
+                return
+            
+            self.refresh()
+    
+    def refresh(self):
+        self.refreshing = True
+        Clock.schedule_once(self._refresh, 0)
+    
+    def _refresh(self, interval):
+        self.app.get_messages(self.app.selected_chat_id, mode=True)
+        self.refreshing = False
     
     def show_user_profile(self):
         chat = self.app.find_contact_by_chat_id(self.app.selected_chat_id)

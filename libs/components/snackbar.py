@@ -18,8 +18,8 @@ class SuccessSnackbar(ExtendedBaseSnackbar):
     text = StringProperty("")
 
 
-def show_error_snackbar(text):
+def show_error_snackbar(text, *args, **kwargs):
     ErrorSnackbar(text=text).open()
 
-def show_success_snackbar(text):
+def show_success_snackbar(text, *args, **kwargs):
     SuccessSnackbar(text=text).open()

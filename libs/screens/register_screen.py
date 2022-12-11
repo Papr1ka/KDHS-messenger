@@ -30,7 +30,7 @@ class RegisterBehavior(LoginBehavior):
         if not check_password_length(self.password):
             return self.show_error('Password must contain at least 8 characters')
         try:
-            self.client.register(self.username, self.password)
+            flag = self.app.register(self.username, self.password)
         except CommonPasswordError:
             return self.show_error('This password is too common')
         except UserExistsError:
@@ -40,7 +40,8 @@ class RegisterBehavior(LoginBehavior):
         except AccessError:
             self.show_error('Invalid username or password')
         else:
-            self.login()
+            if flag:
+                self.login()
 
 
 class RegisterScreenBase(MDFloatLayout, RegisterBehavior):

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Union
 
@@ -12,6 +12,10 @@ class UserModel:
     status: str
     display_name: str
 
+@dataclass
+class ExtendedUserModel(UserModel):
+    chats: list
+
 def createUser(data: dict) -> UserModel:
     user = UserModel(
         id=data['id'],
@@ -19,7 +23,19 @@ def createUser(data: dict) -> UserModel:
         date_joined=datetime.fromisoformat(data['user']['date_joined'][:-1]+ "+00:00").astimezone(),
         avatar_image=data['avatar_image'] if data['avatar_image'] else "assets/icons/user.png",
         status=data['status'],
-        display_name=data['display_name']
+        display_name=data['display_name'],
+    )
+    return user
+
+def createSelfUser(data: dict) -> ExtendedUserModel:
+    user = ExtendedUserModel(
+        id=data['id'],
+        username=data['user']['username'],
+        date_joined=datetime.fromisoformat(data['user']['date_joined'][:-1]+ "+00:00").astimezone(),
+        avatar_image=data['avatar_image'] if data['avatar_image'] else "assets/icons/user.png",
+        status=data['status'],
+        display_name=data['display_name'],
+        chats=data['chats']
     )
     return user
 
