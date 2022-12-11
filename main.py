@@ -14,6 +14,7 @@ from libs.colors import colors
 from libs.data import Data
 from libs.snackcontroller import Controller
 from libs.settings import Settings
+from libs.notify import Notifier
 import kivymd.utils.asynckivy as ak
 from kivy.base import ExceptionHandler
 from logging import config, getLogger
@@ -30,6 +31,7 @@ class KDHSMessengerApp(MDApp, Data, Settings):
         self.client = Client()
         self.controller = Controller()
         self.Logger = Logger
+        self.notifier = Notifier()
         self.Logger.info("starting")
         super().__init__(**kwargs)
     

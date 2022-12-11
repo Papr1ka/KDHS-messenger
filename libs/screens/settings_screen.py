@@ -12,6 +12,7 @@ from libs.components.snackbar import show_error_snackbar, show_success_snackbar
 from kivymd.uix.filemanager import MDFileManager
 from libs.utils.checks import is_image
 from libs.exceptions import InvalidDisplayNameError, InvalidStatusError
+from settings import BASE_DIR
 
 class MyToggleButton(MDFlatButton, MDToggleButton):
     def __init__(self, *args, **kwargs):
@@ -24,11 +25,11 @@ class SettingsScreenBase(MDRelativeLayout):
 class SettingsBehavior(GetApp):
     dialog = None
     
-    path = '/'
+    path = str(BASE_DIR)
     
     def select_path(self, path):
-        self.exit_manager()
         if is_image(path):
+            self.exit_manager()
             self.app.change_avatar(path)
             self.app.controller.show(partial(show_success_snackbar, "Изображение успешно изменено"), 2)
         else:
@@ -38,7 +39,7 @@ class SettingsBehavior(GetApp):
         self.file_manager.show(self.path)
     
     def exit_manager(self, *args):
-        self.path = self.file_manager.current_path
+        self.path = self.file_manager.current_path if self.file_manager.current_path != '' else str(BASE_DIR)
         self.file_manager.close()
 
     def __init__(self, **kw):
@@ -80,6 +81,11 @@ class SettingsBehavior(GetApp):
             else:
                 self.app.controller.show(partial(show_error_snackbar, "Шрифт должен быть от 12 до 40"), 2)
     
+    def change_notify_state(self):
+        flag = self.app.notifications
+        self.app.notifications = not flag
+        self.app.controller.show(partial(show_success_snackbar, "Уведомления были " + ("выключены" if flag else "включены")), 2)
+    
     def bind_components(self, tm):
         self.ids.base.ids.avatar.bind(
             on_press=self.change_avatar
@@ -90,9 +96,9 @@ class SettingsBehavior(GetApp):
         self.ids.base.ids.display_name.bind(
             on_text_validate=self.change_display_name
         )
-        self.ids.base.ids.font_size.bind(
-            on_text_validate=self.change_font_size
-        )
+        # self.ids.base.ids.font_size.bind(
+        #     on_text_validate=self.change_font_size
+        # )
 
 
 class SettingsMobileView(MDScreen, SettingsBehavior):

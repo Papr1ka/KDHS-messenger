@@ -1,4 +1,5 @@
 import asyncio
+import time
 import requests
 from libs.exceptions import CommonPasswordError, InvalidDisplayNameError, InvalidStatusError, NotFoundError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
 from pathlib import Path
@@ -166,6 +167,9 @@ class Client(GetApp):
             raise ServerError(f'Server exception 400: {r.text}')
         raise AccessError(r.text)
     
+    def reconnect(self, timeout=10):
+        pass
+    
     
     def autorize(self, username: str, password: str) -> str:
         
@@ -190,7 +194,7 @@ class Client(GetApp):
     
     def __connect(self):
         self.factory = AppWebsocketClientFactory(WS_URL + self.token, self.app)
-        reactor.connectTCP(WS_SERVER_URL, 8000, self.factory)
+        reactor.connectTCP(WS_SERVER_URL, 7000, self.factory)
         Logger.info(f"{name}: connection ok")
 
     @requiredAuthorization

@@ -40,12 +40,12 @@ class LoginBehavior(GetApp):
             return self.show_error('Password must contain at least 8 characters')
         try:
             # self.client.autorize(self.username, self.password)
-            flag = self.app.login('bob', 'qweqweqwe123')
+            flag = self.app.login(self.username, self.password)
         except AccessError:
             self.show_error('Invalid username or password')
         else:
             if flag:
-                self.app.on_login()
+                # self.app.on_login()
                 self.app.screen_manager.switch_screen('main_screen')
 
 

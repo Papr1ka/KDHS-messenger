@@ -45,6 +45,7 @@ class AppWebsocketClientProtocol(WebSocketClientProtocol):
 
     def onClose(self, wasClean, code, reason):
         Logger.error(f"{name}: WebSocket connection closed {reason}")
+        self.factory.app.reconnect()
 
 
 class AppWebsocketClientFactory(WebSocketClientFactory):

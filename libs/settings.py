@@ -10,19 +10,23 @@ class Params:
 
 class Settings():
     def __init__(self) -> None:
-        if exists(Path('/settings.pickle')):
+        if exists(Path('settings.pickle')):
+            print("файл найдун")
             with open(Path('settings.pickle'), 'rb') as settings:
                 data = pickle.load(settings)
+            print("файл загружен")
             self._font_size = data.font_size
             self._notifications = data.notifications
+            print("что мы получили", data.font_size, data.notifications)
         else:
             self._font_size = 18
             self._notifications = True
+            print("что-то не так")
 
     @property
     def font_size(self):
         if isinstance(self._font_size, int):
-            if (12 <= self._font_size <= 12):
+            if (12 <= self._font_size <= 40):
                 return self._font_size
             else:
                 return 12
@@ -50,5 +54,5 @@ class Settings():
     
     def save(self):
         data = Params(self._font_size, self._notifications)
-        with open(Path('settings.pickle'), 'rb') as settings:
+        with open(Path('settings.pickle'), 'wb') as settings:
             pickle.dump(data, settings)

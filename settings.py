@@ -49,6 +49,7 @@ def on_size(self, instance, size: list) -> None:
 WindowController.on_size = on_size
 
 SERVER_URL = "http://127.0.0.1:8000"
+SERVER_URL = "http://193.124.115.112:7000"
 
 
 """

@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from functools import partial
 from libs.exceptions import AccessError, InvalidDisplayNameError, InvalidStatusError, ServerError, NotAutirizedError
 from requests.exceptions import RequestException
@@ -11,14 +12,20 @@ from kivy.properties import ObjectProperty, ListProperty, StringProperty, Numeri
 from kivy.uix.label import Label
 from kivymd.app import MDApp
 from logging import Logger
-from libs.notify import notify
+from libs.notify import Notifier
+from kivy.clock import Clock
 
-BaseExceptions = (ServerError, AccessError, RequestException, NotAutirizedError)
+from settings import Logger
+
+name = __name__
+
+BaseExceptions = (ServerError, AccessError, RequestException, NotAutirizedError, ValueError)
 
 class Data():
     
     client: Client
     controller: Controller
+    notifier: Notifier
     app: MDApp
     self_user: UserModel = None
     Logger: Logger = None
@@ -47,9 +54,12 @@ class Data():
     """
     contacts_loaded: bool = False
     chats = {}
+    chats_parts = {}
     selected_chat_id = StringProperty("")
+    last_chat_id: str = None
     current_destination_username = StringProperty("")
     current_destination_avatar_url = StringProperty("assets/icons/user.png")
+    auth_data: tuple
     
     #о нас
     current_username = StringProperty("")
@@ -60,13 +70,9 @@ class Data():
 
     def on_login(self):
         print("on_login")
-        try:
-            self.self_user = self.get_self_user()
-        except BaseExceptions:
-            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+        self.self_user = self.get_self_user()
         self.current_username = self.self_user.username
         self.current_avatar_url = self.self_user.avatar_image
-        print(self.self_user.date_joined)
         self.current_date_created = self.self_user.date_joined.strftime("%d:%m:%Y")
         self.current_display_name = self.self_user.display_name
         self.current_status = self.self_user.status
@@ -75,10 +81,12 @@ class Data():
         self.app = MDApp.get_running_app()
 
     def login(self, username, password):
+        self.auth_data = (username, password)
         try:
             self.client.autorize(username, password)
-        except (ServerError, RequestException):
-            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            self.on_login()
+        except (ServerError, RequestException) as E:
+            self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             return False
         return True
 
@@ -86,7 +94,7 @@ class Data():
         try:
             self.client.register(username, password)
         except (ServerError, RequestException):
-            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             return False
         return True
 
@@ -103,13 +111,29 @@ class Data():
         self.current_avatar_url = "assets/icons/user.png"
         self.messages = []
         self.chats = {}
+        self.auth_data = ()
+    
+    def reconnect(self):
+        """
+        начинает цикл переподключения
+        """
+        self.controller.show(partial(show_error_snackbar, "Сервер разорвал соединение, попытка переподключения"), 2)
+        Clock.schedule_once(partial(self._reconnect, 10))
+    
+    def _reconnect(self, timeout, dt):
+        ok = self.login(*self.auth_data)
+        if not ok:
+            Logger.error(f"{name}: can't send")
+            Clock.schedule_once(partial(self._reconnect, timeout * 2), timeout * 2)
+        else:
+            self.controller.show(partial(show_success_snackbar, "Подключение восстановлено"), 2)
     
     def search_contacts(self, username: str):
         try:
             users: list[UserModel] = self.client.searchUsers(username)
         except BaseExceptions:
             self.display_viewset.clear()
-            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         else:
             viewset = []
             for user in users:
@@ -120,12 +144,11 @@ class Data():
                         exists = True
                         break
                 if not exists:
-                    viewset.append(asdict(createContact(user)))
+                    if user.id != self.self_user.id:
+                        viewset.append(asdict(createContact(user)))
             
             self.display_viewset.clear()
             self.display_viewset = viewset
-        print("обновил")
-        print(self.display_viewset)
     
     def show_contacts(self):
         """
@@ -136,17 +159,15 @@ class Data():
         self.display_viewset = self.contacts_viewset
     
     def create_chat(self, user_id: int):
-        print(user_id)
-        print("create chat")
         try:
             chat = self.client.createchat(str(user_id))
         except BaseExceptions:
-            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         else:
             try:
                 user = self.client.getuser(str(user_id))
             except BaseExceptions:
-                self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+                self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             else:
                 chat = ChatModel(chat.id, chat.messages, chat.created_at, chat.users, user.username, user.id, "", user.avatar_image)
                 self.contacts.insert(0, chat)
@@ -170,7 +191,7 @@ class Data():
         try:
             data = self.client.getcontacts()['chats']['chats']
         except BaseExceptions:
-            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         except Exception as E:
             self.controller.show(partial(show_error_snackbar, "Ошибка"), 2)
         else:
@@ -181,10 +202,13 @@ class Data():
                 self.contacts_viewset.append(asdict(createChatView(chat_model)))
     
     def post_load_contacts(self, size: int):
+        """
+        если появился новый контакт (кто-то создал с нами чат), добавляем его в контакты и показываем вверху списка
+        """
         try:
             data = self.client.getcontacts(size)['chats']['chats']
         except BaseExceptions:
-            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         except Exception as E:
             self.controller.show(partial(show_error_snackbar, "Ошибка"), 2)
         else:
@@ -193,21 +217,49 @@ class Data():
                 self.contacts.insert(0, (chat_model))
                 self.contacts_viewset.insert(0, asdict(createChatView(chat_model)))
     
-    def get_messages(self, chat_id: str):
+    def get_messages(self, chat_id: str, mode=False):
         """
         Получает список сообщений для чата с id - chat_id, если история сообщений существует, загружает с неё, если нет - с сервера
         """
-        story_exists = self.chats.get(chat_id, None)
+        print("вызвали метод")
+        story_exists = self.chats.get(chat_id)
+
         if not story_exists:
             try:
-                messages = self.client.getmessagelist(chat_id, '1')
+                messages = self.client.getmessagelist(chat_id, "1")
             except BaseExceptions:
-                messages = []
-                self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
-            for message in messages:
-                self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True)
+                self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
+            else:
+                for message in messages:
+                    self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True)
+                self.chats_parts[chat_id] = 1
+            
         else:
-            self.messages = self.chats[chat_id]
+            if mode == True:
+                if self.check():
+                    part = self.chats_parts.get(chat_id)
+                    if part:
+                        if part != -1:
+                            part += 1
+                            try:
+                                messages = self.client.getmessagelist(chat_id, str(part))
+                            except BaseExceptions:
+                                self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
+                            else:
+                                if len(messages) == 0:
+                                    self.chats_parts[chat_id] = -1
+                                else:
+                                    for message in messages:
+                                        self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True, mode='start')
+                                    self.chats_parts[chat_id] = part
+            else:
+                self.messages = self.chats[chat_id]
+    
+    def check(self):
+        if (self.last_chat_id == self.selected_chat_id):
+            return True
+        self.last_chat_id = self.selected_chat_id
+        return False
     
     def find_contact_by_chat_id(self, chat_id) -> ChatModel:
         for chat_model in self.contacts:
@@ -229,20 +281,23 @@ class Data():
         Меняет название для выбранного чата, id выбранного чата, загружает список сообщений для выбранного чата
         """
         print("on_chat_switch")
+        self.last_chat_id = self.selected_chat_id
         self.selected_chat_id = chat_id
         self.current_destination_username = self.find_contact_by_chat_id(chat_id).destination_username
         self.messages = []
-        self.get_messages(chat_id)
+        self.get_messages(chat_id, mode=False)
     
-    def add_message(self, content: str, from_me=True):
+    def add_message(self, content: str, from_me=True, mode='end'):
         """
         Добавляет сообщение в список отображаемых сообщений, сохраняет в словарь сохранённых сообщений
         """
-        
         data = self.generate_message_view(content, from_me)
         
-        self.messages.append(data)
-        self.story_message(data)
+        if mode == 'end':
+            self.messages.append(data)
+        else:
+            self.messages.insert(0, data)
+        self.story_message(data, mode=mode)
     
     def generate_message_view(self, content: str, from_me=True):
         """
@@ -260,7 +315,7 @@ class Data():
         data.update({'max_text_width': l.texture_size[0] * 1.08})
         return data
     
-    def story_message(self, data: dict, chat_id=None):
+    def story_message(self, data: dict, chat_id=None, mode='end'):
         """
         Добавляет данные для отображения сообщения в конкретный чат
         """
@@ -268,9 +323,12 @@ class Data():
         if current_chat_id != '':
             story_exists = self.chats.get(current_chat_id, None)
             if not story_exists:
-                self.chats[current_chat_id] = []
-            self.chats[current_chat_id].append(data)
-    
+                self.chats[current_chat_id] = [data]
+            if mode == 'end':
+                self.chats[current_chat_id].append(data)
+            else:
+                self.chats[current_chat_id].insert(0, data)
+
     def send_message(self, message: str):
         """
         Если выбран чат, отправляет сообщение на сервер,
@@ -278,7 +336,11 @@ class Data():
         заменяет последнее сообщение в чате с пользователем на новое
         """
         if self.selected_chat_id != '':
-            msg = self.client.sendmessage(self.selected_chat_id, message)
+            try:
+                msg = self.client.sendmessage(self.selected_chat_id, message)
+            except BaseExceptions:
+                self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
+                return
             self.add_message(message, from_me=True)
             
             self.change_chat_last_message(msg, self.selected_chat_id)
@@ -306,7 +368,7 @@ class Data():
         else:
             data = self.generate_message_view(message.text, from_me=False)
             self.story_message(data, str(message.chat_id))
-            notify(self.find_contact_by_chat_id(str(message.chat_id)).destination_username, message.text)
+            self.notifier.notify(self.find_contact_by_chat_id(str(message.chat_id)).destination_username, message.text)
         self.change_chat_last_message(message, str(message.chat_id))
             
     
@@ -315,7 +377,6 @@ class Data():
         сюда приходит обновлённый пользотель (наш пользователь) (мы)
         если есть новые чаты, возвращаем true
         """
-        print("я не хочу эту поеботу обрабатывать", data)
         user = self.get_self_user()
         if data.get('data'):
             data = data['data']
@@ -336,13 +397,13 @@ class Data():
         self.client.change_avatar(path_to_image)
         self.self_user = None
         self.self_user = self.get_self_user()
-        self.current_avatar_url = self.self_user.avatar_url
+        self.current_avatar_url = self.self_user.avatar_image
 
     def get_user(self, user_id) -> Union[UserModel, None]:
         try:
             user = self.client.getuser(str(user_id))
         except BaseExceptions:
-            self.controller.show(partial(show_error_snackbar, "Ошибка Сервера, попробуйте позже"), 2)
+            self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         else:
             return user
     

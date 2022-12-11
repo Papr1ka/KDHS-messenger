@@ -89,7 +89,7 @@
                     id: display_name
                     text: app.current_display_name
                     hint_text: "Отображаемое имя"
-                    max_text_length: 40
+                    max_text_length: 32
                 MDLabel:
                     text: "Уведомления"
                     font_size: 14
@@ -102,22 +102,29 @@
                         font_size: 24
                         font_name: "InterM"
                     MDSwitch:
-                MDLabel:
-                    text: "Вид"
-                    font_size: 14
-                    font_name: "InterR"
-                Field:
-                    id: font_size
-                    text: "20"
-                    hint_text: "Шрифт"
-                MDBoxLayout:
-                    padding: [dp(20), 0, dp(20), 0]
-                    orientation: 'horizontal'
-                    MDLabel:
-                        text: "Тёмная тема"
-                        font_size: 24
-                        font_name: "InterM"
-                    MDSwitch:
+                        id: notifications_switch
+                        active: app.notifications
+                        on_active: root.parent.change_notify_state()
+                        thumb_color_active: app.colors['SearchColor']
+                        thumb_color_inactive: app.colors['SearchColor']
+                        track_color_active: app.colors['AccentColor']
+                        track_color_inactive: app.colors['AccentColor']
+                # MDLabel:
+                #     text: "Вид"
+                #     font_size: 14
+                #     font_name: "InterR"
+                # Field:
+                #     id: font_size
+                #     text: str(app.font_size)
+                #     hint_text: "Шрифт"
+                # MDBoxLayout:
+                #     padding: [dp(20), 0, dp(20), 0]
+                #     orientation: 'horizontal'
+                #     MDLabel:
+                #         text: "Тёмная тема"
+                #         font_size: 24
+                #         font_name: "InterM"
+                #     MDSwitch:
                 Widget:
                     height: dp(20)
 
