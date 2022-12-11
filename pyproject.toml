@@ -14,6 +14,7 @@ websockets = "^10.3"
 asynckivy = "^0.5.4"
 Twisted = "^22.8.0"
 autobahn = "^22.7.1"
+plyer = "^2.1.0"
 
 [tool.poetry.dev-dependencies]
 

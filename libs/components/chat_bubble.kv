@@ -11,7 +11,7 @@
     text_size: self.width, None
     canvas.before:
         Color:
-            rgba: (0, 0, 0, 1)
+            rgba: app.colors['AccentColor']
         RoundedRectangle:
             radius: [16]
             pos: self.pos if root.halign == 'left' else [self.pos[0] + self.text_size[0] - self.text_width, self.pos[1]]

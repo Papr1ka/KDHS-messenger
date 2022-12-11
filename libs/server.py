@@ -1,18 +1,26 @@
 import asyncio
+import time
 import requests
 from libs.exceptions import CommonPasswordError, InvalidDisplayNameError, InvalidStatusError, NotFoundError, ServerError, AccessError, ShortPasswordError, UserExistsError, NotAutirizedError
 from pathlib import Path
 import websockets
 import json
 
-from libs.models import ChatAPIModel, MessageModel, UserModel, createChatAPI, createMessage, createUser
+from libs.models import ChatAPIModel, MessageModel, UserModel, createChatAPI, createMessage, createSelfUser, createUser
 from settings import SERVER_URL
+from libs.websocket import *
+from settings import Logger
+from libs.utils.behaviors import GetApp
+from kivy.clock import Clock
+
 
 #SERVER_URL = "https://connection-net.herokuapp.com"
+name = __name__
 
 
 URL = SERVER_URL + "/api/v1/"
 WS_URL = "ws://" + SERVER_URL[7:] + "/ws/messages/?token="
+WS_SERVER_URL = SERVER_URL[7:-5]
 "127.0.0.1/ws/messages/?token=0d2fbbd2e568294cd3b95471388275e300e51a93"
 
 """
@@ -113,96 +121,23 @@ chat:
 
 """
 
-class Protocol():
-    def __init__(self):
-        self.autorized = False
-    
-    def requiredAuthorization(func):
-        def wrapper(self, *args, **kwargs):
-            if not self.autorized:
-                raise NotAutirizedError("Required Authorization")
-            return func(self, *args, **kwargs)
-        return wrapper
 
-    def autorize(self, username: str, password: str) -> str:
-        if not isinstance(username, str):
-            raise ValueError("Expected username:str")
-        if not isinstance(password, str):
-            raise ValueError("Expected password:str")
-
-        url = URL + 'auth/token/login'
-        data = {
-            'username': username,
-            'password': password
-        }
-        r = requests.post(url=url, json=data)
-        if r.status_code == 200:
-            self.token = r.json()['auth_token']
-            self.autorized = True
-            self.headers = {'Authorization': f'Token {self.token}'}
-            return self.token
-        raise AccessError(r.text)
-
-class WebsocketClient(Protocol):
-    
-    handlers = {
-        'on_message_create': [lambda *x: print(x)]
-    }
-    
-    def __init__(self):
-        self.client = websockets
-        super().__init__()
-    
-    async def connect(self):
-        self.client = await self.client.connect(WS_URL + self.token)
-    
-    def requiredAuthorization(func):
-        def wrapper(self, *args, **kwargs):
-            if not self.autorized:
-                raise NotAutirizedError("Required Authorization")
-            return func(self, *args, **kwargs)
-        return wrapper
-    
-    async def listen(self):
-        await self.client.send(json.dumps({
-            'pk': "3",
-            'action': "start_listen",
-            'request_id': 123,
-        }))
-        print("sended")
-        while True:
-            bytes_data = await self.client.recv()
-            data = json.loads(bytes_data)
-            await self.on_event(data, data['event'])
-    
-    async def on_event(self, data, event):
-        await self.dispatch(event, data)
-    
-    async def bind(self, event, function):
-        handlers = self.handlers.get(event, None)
-        if handlers:
-            self.handlers[event].append(function)
-        else:
-            self.handlers[event] = [function]
-    
-    async def dispatch(self, event, data):
-        handlers = self.handlers.get(event, None)
-        if handlers:
-            for handler in handlers:
-                handler(data)
-        else:
-            print("event", event, "Does not exists")
-    
-    async def handle_send_message(self):
-        pass
-
-    def send_message(self):
-        pass
+from kivy.support import install_twisted_reactor
+import sys
+install_twisted_reactor()
+from twisted.internet import reactor
 
 
-class Client():
+
+
+class Client(GetApp):
+    
+    autorized: bool
+    connection: AppWebsocketClientProtocol
+    
     def __init__(self) :
         self.autorized = False
+        self.connection = None
 
     def requiredAuthorization(func):
         def wrapper(self, *args, **kwargs):
@@ -212,9 +147,18 @@ class Client():
         return wrapper
             
     @requiredAuthorization
-    def getcontacts(self) -> dict:
+    def getcontacts(self, size: int = 0) -> dict:
+        """
+        size: если нужно получить лишь последние несколько контактов
+        """
         url = URL + 'chatList'
-        r = requests.get(url=url, headers=self.headers)
+        if size > 0:
+            data = {
+                'size': size
+            }
+            r = requests.get(url=url, headers=self.headers, json=data)
+        else:
+            r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
             return r.json()
         elif r.status_code == 204:
@@ -222,6 +166,9 @@ class Client():
         elif r.status_code == 400:
             raise ServerError(f'Server exception 400: {r.text}')
         raise AccessError(r.text)
+    
+    def reconnect(self, timeout=10):
+        pass
     
     
     def autorize(self, username: str, password: str) -> str:
@@ -240,16 +187,22 @@ class Client():
         if r.status_code == 200:
             self.token = r.json()['auth_token']
             self.autorized = True
+            self.__connect()
             self.headers = {'Authorization': f'Token {self.token}'}
             return self.token
         raise AccessError(r.text)
     
+    def __connect(self):
+        self.factory = AppWebsocketClientFactory(WS_URL + self.token, self.app)
+        reactor.connectTCP(WS_SERVER_URL, 7000, self.factory)
+        Logger.info(f"{name}: connection ok")
+
     @requiredAuthorization
     def getMe(self) -> UserModel:
         url = URL + 'user'
         r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
-            return createUser(r.json())
+            return createSelfUser(r.json())
         elif r.status_code == 204:
             raise ServerError(f'Server exception 204: {r.text}')
         elif r.status_code == 400:
@@ -345,7 +298,7 @@ class Client():
             result = r.json()
             error = result.get("error", None)
             if error:
-                raise ValueError(error)
+                raise ServerError(error)
             resp = []
             for msg in result['messages']:
                 resp.append(createMessage(msg))
@@ -434,3 +387,6 @@ class Client():
                     raise CommonPasswordError(r.text)
             raise AccessError(r.text)
         raise AccessError(r.text)
+    
+from twisted.python import log
+log.startLogging(sys.stdout)

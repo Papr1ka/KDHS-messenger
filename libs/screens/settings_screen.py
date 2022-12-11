@@ -1,3 +1,4 @@
+from functools import partial
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.responsivelayout import MDResponsiveLayout
 from kivymd.uix.relativelayout import MDRelativeLayout
@@ -11,6 +12,7 @@ from libs.components.snackbar import show_error_snackbar, show_success_snackbar
 from kivymd.uix.filemanager import MDFileManager
 from libs.utils.checks import is_image
 from libs.exceptions import InvalidDisplayNameError, InvalidStatusError
+from settings import BASE_DIR
 
 class MyToggleButton(MDFlatButton, MDToggleButton):
     def __init__(self, *args, **kwargs):
@@ -23,21 +25,21 @@ class SettingsScreenBase(MDRelativeLayout):
 class SettingsBehavior(GetApp):
     dialog = None
     
-    path = '/'
+    path = str(BASE_DIR)
     
     def select_path(self, path):
-        self.exit_manager()
         if is_image(path):
+            self.exit_manager()
             self.app.change_avatar(path)
-            show_success_snackbar("Изображение успешно изменено")
+            self.app.controller.show(partial(show_success_snackbar, "Изображение успешно изменено"), 2)
         else:
-            show_error_snackbar("Изображение/Файл не поддерживается")
+            self.app.controller.show(partial(show_error_snackbar, "Изображение/Файл не поддерживается"), 2)
     
     def change_avatar(self, button):
         self.file_manager.show(self.path)
     
     def exit_manager(self, *args):
-        self.path = self.file_manager.current_path
+        self.path = self.file_manager.current_path if self.file_manager.current_path != '' else str(BASE_DIR)
         self.file_manager.close()
 
     def __init__(self, **kw):
@@ -53,31 +55,36 @@ class SettingsBehavior(GetApp):
             try:
                 self.app.change_user_data({'status': instance.text})
             except InvalidStatusError:
-                show_error_snackbar("Статус введён некорректно")
+                self.app.controller.show(partial(show_error_snackbar, "Статус введён некорректно"), 2)
             else:
-                show_success_snackbar("Статус успешно измененён")
+                self.app.controller.show(partial(show_success_snackbar, "Статус успешно измененён"), 2)
     
     def change_display_name(self, instance):
         if instance.text != "":
             try:
                 self.app.change_user_data({'display_name': instance.text})
             except InvalidDisplayNameError:
-                show_error_snackbar("Имя введено некорректно")
+                self.app.controller.show(partial(show_error_snackbar, "Имя введено некорректно"), 2)
             else:
-                show_success_snackbar("Имя успешно изменено")
+                self.app.controller.show(partial(show_success_snackbar, "Имя успешно изменено"), 2)
 
     def change_font_size(self, instance):
         font_size = instance.text
         try:
             font_size = int(font_size)
         except (TypeError, ValueError):
-            show_error_snackbar("Шрифт должен быть от 12 до 40")
+            self.app.controller.show(partial(show_error_snackbar, "Шрифт должен быть от 12 до 40"), 2)
         else:
             if 12 <= font_size <= 40:
-                self.app.change_font_size(font_size)
-                show_success_snackbar("Шрифт успешно изменён")
+                self.app.font_size = font_size
+                self.app.controller.show(partial(show_success_snackbar, "Шрифт успешно изменён"), 2)
             else:
-                show_error_snackbar("Шрифт должен быть от 12 до 40")
+                self.app.controller.show(partial(show_error_snackbar, "Шрифт должен быть от 12 до 40"), 2)
+    
+    def change_notify_state(self):
+        flag = self.app.notifications
+        self.app.notifications = not flag
+        self.app.controller.show(partial(show_success_snackbar, "Уведомления были " + ("выключены" if flag else "включены")), 2)
     
     def bind_components(self, tm):
         self.ids.base.ids.avatar.bind(
@@ -89,9 +96,9 @@ class SettingsBehavior(GetApp):
         self.ids.base.ids.display_name.bind(
             on_text_validate=self.change_display_name
         )
-        self.ids.base.ids.font_size.bind(
-            on_text_validate=self.change_font_size
-        )
+        # self.ids.base.ids.font_size.bind(
+        #     on_text_validate=self.change_font_size
+        # )
 
 
 class SettingsMobileView(MDScreen, SettingsBehavior):
