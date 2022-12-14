@@ -27,7 +27,7 @@ class Data():
     controller: Controller
     notifier: Notifier
     app: MDApp
-    self_user: UserModel = None
+    self_user: ExtendedUserModel = None
     Logger: Logger = None
 
     contacts: list[ChatModel] = ListProperty([])
@@ -95,6 +95,8 @@ class Data():
     def register(self, username, password):
         try:
             self.client.register(username, password)
+            self.reactor_running = True
+            self.on_login()
         except (ServerError, RequestException):
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             return False
@@ -106,6 +108,7 @@ class Data():
         self.contacts = []
         self.contacts_loaded = False
         self.contacts_viewset = []
+        self.display_viewset = []
         self.selected_chat_id = ""
         self.current_destination_username = ""
         self.current_destination_avatar_url = "assets/icons/user.png"
@@ -113,7 +116,9 @@ class Data():
         self.current_avatar_url = "assets/icons/user.png"
         self.messages = []
         self.chats = {}
+        self.chats_parts = {}
         self.auth_data = ()
+        self.last_chat_id = None
         try:
             self.client.disconnect()
             self.reactor_running = False
@@ -152,6 +157,8 @@ class Data():
                         exists = True
                         break
                 if not exists:
+                    print("сейчас будет search_contacts print")
+                    print(user, self.self_user)
                     if user.id != self.self_user.id:
                         viewset.append(asdict(createContact(user)))
             
@@ -163,28 +170,29 @@ class Data():
         Показывает контакты
         Заменяет данные из display_viewset на данные из contacts_viewset
         """
+        print("on_show_contacts")
         self.display_viewset.clear()
         self.display_viewset = self.contacts_viewset
+        print("контакты")
+        print(self.contacts_viewset)
     
     def create_chat(self, user_id: int):
         try:
-            chat = self.client.createchat(str(user_id))
+            str_user_id = str(user_id)
+            chat = self.client.createchat(str_user_id)
+            self.self_user.chats.append(chat.id)
+            user = self.client.getuser(str_user_id)
         except BaseExceptions:
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         else:
-            try:
-                user = self.client.getuser(str(user_id))
-            except BaseExceptions:
-                self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
-            else:
-                chat = ChatModel(chat.id, chat.messages, chat.created_at, chat.users, user.username, user.id, "", user.avatar_image)
-                self.contacts.insert(0, chat)
-                view = asdict(createChatView(chat))
-                self.contacts_viewset.insert(0, view)
-                old_contact = self.find_display_view_by_chat_id(user_id)
-                self.display_viewset.remove(old_contact)
-                self.display_viewset.insert(0, view)
-                self.on_chat_switch(str(chat.id))
+            chat = ChatModel(chat.id, chat.messages, chat.created_at, chat.users, user.username, user.id, "", user.avatar_image)
+            self.contacts.insert(0, chat)
+            view = asdict(createChatView(chat))
+            self.contacts_viewset.insert(0, view)
+            old_contact = self.find_display_view_by_chat_id(user_id)
+            self.display_viewset.remove(old_contact)
+            self.display_viewset.insert(0, view)
+            self.on_chat_switch(str(chat.id))
 
     def get_self_user(self):
         if self.self_user is None:
@@ -222,7 +230,7 @@ class Data():
         else:
             for chat in data:
                 chat_model = createChat(chat)
-                self.contacts.insert(0, (chat_model))
+                self.contacts.insert(0, chat_model)
                 self.contacts_viewset.insert(0, asdict(createChatView(chat_model)))
     
     def get_messages(self, chat_id: str, mode=False):
@@ -230,27 +238,38 @@ class Data():
         Получает список сообщений для чата с id - chat_id, если история сообщений существует, загружает с неё, если нет - с сервера
         """
         print("вызвали метод")
-        story_exists = self.chats.get(chat_id)
+        print(self.chats)
+        if chat_id == '':
+            return
+        story_exists = (self.chats.get(chat_id) is not None)
 
         if not story_exists:
+            print("истории не существует")
             try:
                 messages = self.client.getmessagelist(chat_id, "1")
             except BaseExceptions:
                 self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             else:
-                for message in messages:
-                    self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True)
+                if len(messages) == 0:
+                    print("сообщений нет, создаём историю")
+                    self.chats[chat_id] = []
+                else:
+                    for message in messages:
+                        self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True)
                 self.chats_parts[chat_id] = 1
             
         else:
+            print("история существует")
             if mode == True:
+                print("режим включен")
                 if self.check():
                     part = self.chats_parts.get(chat_id)
                     if part:
+                        print(part)
                         if part != -1:
                             part += 1
                             try:
-                                messages = self.client.getmessagelist(chat_id, str(part))
+                                messages = self.client.getmessagelist(chat_id, str(part))[::-1]
                             except BaseExceptions:
                                 self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
                             else:
@@ -261,8 +280,10 @@ class Data():
                                         self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True, mode='start')
                                     self.chats_parts[chat_id] = part
             else:
+                print("режим выключен", self.chats[chat_id])
                 self.messages = self.chats[chat_id]
-    
+        print(self.chats)
+
     def check(self):
         if (self.last_chat_id == self.selected_chat_id):
             return True
@@ -327,15 +348,28 @@ class Data():
         """
         Добавляет данные для отображения сообщения в конкретный чат
         """
+        print("on_story_message_start", self.chats)
         current_chat_id = chat_id if chat_id is not None else self.selected_chat_id
         if current_chat_id != '':
             story_exists = self.chats.get(current_chat_id, None)
             if not story_exists:
-                self.chats[current_chat_id] = [data]
-            if mode == 'end':
-                self.chats[current_chat_id].append(data)
+                new_data = []
+                try:
+                    last_messages = self.client.getmessagelist(current_chat_id, "1")
+                except BaseException:
+                    self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
+                else:
+                    for message in last_messages[:-1]:
+                        new_data.append(self.generate_message_view(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True))
+                    new_data.append(data)
+                    self.chats[current_chat_id] = new_data
+                    self.chats_parts[current_chat_id] = 1
             else:
-                self.chats[current_chat_id].insert(0, data)
+                if mode == 'end':
+                    self.chats[current_chat_id].append(data)
+                else:
+                    self.chats[current_chat_id].insert(0, data)
+        print("on_story_message_end", self.chats)
 
     def send_message(self, message: str):
         """
@@ -371,6 +405,7 @@ class Data():
         """
         Получает входящие сообщения в лайв режиме
         """
+        print("on_message", message, self.chats)
         if message.author_id != str(self.self_user.id):
             if str(message.chat_id) == self.selected_chat_id:
                 self.add_message(message.text, from_me=False)
@@ -390,11 +425,15 @@ class Data():
         if data.get('data'):
             data = data['data']
         
+        print(data, self.contacts)
+        
         if data['chats']:
             new_chat_length = len(data['chats'])
             old_chat_length = len(user.chats)
             if new_chat_length > old_chat_length:
                 for i in range(new_chat_length - 1, old_chat_length - 1, -1):
+                    print("туда запишут")
+                    print(data['chats'][i]['id'], type(data['chats'][i]['id']))
                     self.self_user.chats.append(data['chats'][i]['id'])
                 self.post_load_contacts(new_chat_length - old_chat_length)
                 self.show_contacts()

@@ -21,6 +21,7 @@ name = __name__
 URL = SERVER_URL + "/api/v1/"
 WS_URL = "ws://" + SERVER_URL[7:] + "/ws/messages/?token="
 WS_SERVER_URL = SERVER_URL[7:-5]
+PORT = int(SERVER_URL[-4:])
 "127.0.0.1/ws/messages/?token=0d2fbbd2e568294cd3b95471388275e300e51a93"
 
 """
@@ -196,8 +197,7 @@ class Client(GetApp):
     
     def __connect(self):
         self.factory = AppWebsocketClientFactory(WS_URL + self.token, self.app)
-        print(dir(reactor), dir(self.factory))
-        reactor.connectTCP(WS_SERVER_URL, 7000, self.factory)
+        reactor.connectTCP(WS_SERVER_URL, PORT, self.factory)
         Logger.info(f"{name}: connection ok")
 
     @requiredAuthorization

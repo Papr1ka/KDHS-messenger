@@ -23,10 +23,7 @@ from threading import Thread
 
 
 class Bar(MDTopAppBar, GetApp):
-    def on_touch_down(self, touch):
-        print(self.app.current_destination_username)
-        if self.collide_point(touch.x, touch.y):
-            print(self.app.current_destination_username)
+    pass
 
 
 class ChatItem(ChatListItem):
@@ -36,11 +33,10 @@ class ChatItem(ChatListItem):
             self.open_messages()
     
     def open_messages(self):
-        screen = self.app.screen_manager.adaptive_switch_screen('messages_screen', self.app.root)
+        self.app.screen_manager.adaptive_switch_screen('messages_screen', self.app.root)
         try:
             self.app.on_chat_switch(self.chat_id)
         except AttributeError as E:
-            print(E)
             self.app.create_chat(self.id)
             
             print("вызвал функцию, отработала")
@@ -51,8 +47,6 @@ class ContentNavigationDrawer(MDBoxLayout):
 
 
 class MainContactEventBehavior(GetApp):
-    
-    # contacts = ListProperty([])
     
     def __init__(self) -> None:
         super().__init__()
@@ -177,6 +171,7 @@ class MessagesBehavior(GetApp):
         Clock.schedule_once(self._refresh, 0)
     
     def _refresh(self, interval):
+        print("ща обновлю")
         self.app.get_messages(self.app.selected_chat_id, mode=True)
         self.refreshing = False
     

@@ -37,12 +37,12 @@ class LoginBehavior(GetApp):
 
     def login(self):
         if not check_password_length(self.password):
-            return self.show_error('Password must contain at least 8 characters')
+            return self.show_error('Пароль должен состоять из не менее чем 8 символов')
         try:
             # self.client.autorize(self.username, self.password)
             flag = self.app.login(self.username, self.password)
         except AccessError:
-            self.show_error('Invalid username or password')
+            self.show_error('Неправильный логин или пароль')
         else:
             if flag:
                 # self.app.on_login()

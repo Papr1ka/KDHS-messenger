@@ -16,6 +16,7 @@ LabelBase.register(name='InterR', fn_regular='assets/fonts/Inter-Regular.otf')
 BASE_DIR = Path(__file__).resolve().parent
 
 SOURCE_DIR = BASE_DIR.joinpath('libs')
+PATH_TO_ICON = BASE_DIR.joinpath('assets/icons/app.ico')
 
 
 #paths to folders with .kv files
@@ -48,6 +49,12 @@ def on_size(self, instance, size: list) -> None:
 
 WindowController.on_size = on_size
 
+from kivy.config import Config
+
+Config.set('kivy', 'window_icon', str(PATH_TO_ICON))
+
+
+
 SERVER_URL = "http://127.0.0.1:8000"
 SERVER_URL = "http://193.124.115.112:7000"
 
@@ -59,33 +66,3 @@ Logging
 from kivy.logger import Logger, LOG_LEVELS
 
 Logger.setLevel(LOG_LEVELS["debug"])
-
-# from logging import Formatter
-
-# class simpleFormatter(Formatter):
-#     __fmt = "%(name)s : %(funcName)s : %(lineno)d : %(asctime)s : %(levelname)s : %(message)s"
-#     __datefmt = "%d/%m/%Y %I:%M:%S %p"
-
-#     def __init__(self):
-#         super().__init__(fmt=simpleFormatter.__fmt, datefmt=simpleFormatter.__datefmt)
-
-
-
-# config.fileConfig('./logging.ini', disable_existing_loggers=False)
-# Logger = getLogger('KDHS_Messanger')
-# import logging
-
-
-
-
-# for i in logging.Logger.manager.loggerDict:
-#     print(i)
-
-
-# getLogger('requests').setLevel('WARNING')
-# getLogger('urllib3').setLevel('WARNING')
-# getLogger('asyncio').setLevel('WARNING')
-# getLogger('kivy').setLevel('WARNING')
-
-
-# Logger.info("test value")

@@ -109,7 +109,7 @@ class ContactViewModel():
 @dataclass
 class ChatViewModel(ContactViewModel):
     unread_messages: bool
-    chat_id: Union[str, None]
+    chat_id: str
 
 
 def createContact(user: UserModel) -> ChatViewModel:
