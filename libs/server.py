@@ -6,7 +6,7 @@ from pathlib import Path
 import websockets
 import json
 
-from libs.models import ChatAPIModel, MessageModel, UserModel, createChatAPI, createMessage, createSelfUser, createUser
+from libs.models import ChatAPIModel, ExtendedUserModel, MessageModel, UserModel, createChatAPI, createMessage, createSelfUser, createUser
 from settings import SERVER_URL
 from libs.websocket import *
 from settings import Logger
@@ -201,7 +201,7 @@ class Client(GetApp):
         Logger.info(f"{name}: connection ok")
 
     @requiredAuthorization
-    def getMe(self) -> UserModel:
+    def getMe(self) -> ExtendedUserModel:
         url = URL + 'user'
         r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
