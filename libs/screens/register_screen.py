@@ -26,22 +26,22 @@ class RegisterBehavior(LoginBehavior):
 
     def register(self):
         if not self.password == self.password2:
-            return self.show_error("Passwords must match")
+            return self.show_error("Пароли должны совпадать")
         if not check_password_length(self.password):
-            return self.show_error('Password must contain at least 8 characters')
+            return self.show_error('Пароль должен состоять не менее чем из 8 символов')
         try:
             flag = self.app.register(self.username, self.password)
         except CommonPasswordError:
-            return self.show_error('This password is too common')
+            return self.show_error('Слишком слабый пароль')
         except UserExistsError:
-            return self.show_error('A user with that username already exists')
+            return self.show_error('Пользователь с таким именем уже существует')
         except ShortPasswordError:
-            return self.show_error('Password must contain at least 8 characters') 
+            return self.show_error('Пароль должен состоять не менее чем из 8 символов') 
         except AccessError:
-            self.show_error('Invalid username or password')
+            self.show_error('Неправильный логин, или пароль')
         else:
             if flag:
-                self.login()
+                self.app.screen_manager.switch_screen('main_screen')
 
 
 class RegisterScreenBase(MDFloatLayout, RegisterBehavior):
