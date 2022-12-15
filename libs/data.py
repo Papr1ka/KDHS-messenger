@@ -70,7 +70,7 @@ class Data():
     reactor_running = False
 
     def on_login(self):
-        Logger.debug(f"{name}: on_login")
+        Logger.info(f"{name}: on_login")
         self.self_user = self.get_self_user()
         self.current_username = self.self_user.username
         self.current_avatar_url = self.self_user.avatar_image
@@ -83,11 +83,13 @@ class Data():
 
     def login(self, username, password):
         self.auth_data = (username, password)
+        Logger.debug(f"{name}: Logging in...")
         try:
             self.client.autorize(username, password)
             self.reactor_running = True
             self.on_login()
         except (ServerError, RequestException) as E:
+            Logger.error(f"{name}: Server is not responding")
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             return False
         return True
@@ -98,12 +100,13 @@ class Data():
             self.reactor_running = True
             self.on_login()
         except (ServerError, RequestException):
+            Logger.error(f"{name}: Server is not responding")
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             return False
         return True
 
     def on_sign_out(self):
-        Logger.debug(f"{name}: on_sign_out")
+        Logger.info(f"{name}: on_sign_out")
         self.self_user = None
         self.contacts = []
         self.contacts_loaded = False
@@ -129,7 +132,7 @@ class Data():
         """
         начинает цикл переподключения
         """
-        Logger.debug(f"{name}: Start trying to reconnect...")
+        Logger.error(f"{name}: Start trying to reconnect...")
         if self.reactor_running:
             self.controller.show(partial(show_error_snackbar, "Сервер разорвал соединение, попытка переподключения"), 2)
             Clock.schedule_once(partial(self._reconnect, 10))
@@ -147,6 +150,7 @@ class Data():
         try:
             users: list[UserModel] = self.client.searchUsers(username)
         except BaseExceptions:
+            Logger.error(f"{name}: Server is not responding")
             self.display_viewset.clear()
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         else:
@@ -181,6 +185,7 @@ class Data():
             self.self_user.chats.append(chat.id)
             user = self.client.getuser(str_user_id)
         except BaseExceptions:
+            Logger.error(f"{name}: Server is not responding")
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         else:
             chat = ChatModel(chat.id, chat.messages, chat.created_at, chat.users, user.username, user.id, "", user.avatar_image)
@@ -205,8 +210,10 @@ class Data():
         try:
             data = self.client.getcontacts()['chats']['chats']
         except BaseExceptions:
+            Logger.error(f"{name}: Server is not responding")
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         except Exception as E:
+            Logger.error(f"{name}: Some Error: {E}")
             self.controller.show(partial(show_error_snackbar, "Ошибка"), 2)
         else:
             self.contacts.clear()
@@ -222,8 +229,10 @@ class Data():
         try:
             data = self.client.getcontacts(size)['chats']['chats']
         except BaseExceptions:
+            Logger.error(f"{name}: Server is not responding")
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         except Exception as E:
+            Logger.error(f"{name}: Some Error: {E}")
             self.controller.show(partial(show_error_snackbar, "Ошибка"), 2)
         else:
             for chat in data:
@@ -243,6 +252,7 @@ class Data():
             try:
                 messages = self.client.getmessagelist(chat_id, "1")
             except BaseExceptions:
+                Logger.error(f"{name}: Server is not responding")
                 self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             else:
                 if len(messages) == 0:
@@ -264,6 +274,7 @@ class Data():
                             try:
                                 messages = self.client.getmessagelist(chat_id, str(part))[::-1]
                             except BaseExceptions:
+                                Logger.error(f"{name}: Server is not responding")
                                 self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
                             else:
                                 if len(messages) == 0:
@@ -347,6 +358,7 @@ class Data():
                 try:
                     last_messages = self.client.getmessagelist(current_chat_id, "1")
                 except BaseException:
+                    Logger.error(f"{name}: Server is not responding")
                     self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
                 else:
                     for message in last_messages[:-1]:
@@ -370,6 +382,7 @@ class Data():
             try:
                 msg = self.client.sendmessage(self.selected_chat_id, message)
             except BaseExceptions:
+                Logger.error(f"{name}: Server is not responding")
                 self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
                 return
             self.add_message(message, from_me=True)
@@ -436,6 +449,7 @@ class Data():
         try:
             user = self.client.getuser(str(user_id))
         except BaseExceptions:
+            Logger.error(f"{name}: Server is not responding")
             self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
         else:
             return user
@@ -446,6 +460,7 @@ class Data():
         try:
             self.client.change_user_data(data)
         except BaseExceptions:
+            Logger.error(f"{name}: Server is not responding")
             self.controller.show(partial(show_error_snackbar, "Не удалось обновить информацию"), 2)
         else:
             if display_name_changed:

@@ -54,8 +54,6 @@ from kivy.config import Config
 
 Config.set('kivy', 'window_icon', str(PATH_TO_ICON))
 
-if DEBUG:
-    Config.set('kivy', 'log_enable', 0)
 
 SERVER_URL = "http://127.0.0.1:8000"
 SERVER_URL = "http://193.124.115.112:7000"
@@ -67,6 +65,4 @@ Logging
 
 from kivy.logger import Logger, LOG_LEVELS
 
-if DEBUG:
-    Logger.setLevel(LOG_LEVELS["debug"])
-
+Logger.setLevel(LOG_LEVELS['debug'])

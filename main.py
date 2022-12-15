@@ -60,6 +60,6 @@ class KDHSMessengerApp(MDApp, Data, Settings):
 
 
 if __name__ == "__main__":
-    from twisted.python import log
-    log.startLogging(sys.stdout)
+    # from twisted.python import log
+    # log.startLogging(sys.stdout)
     KDHSMessengerApp().run()
