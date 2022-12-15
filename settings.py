@@ -4,6 +4,7 @@ from kivymd.uix.controllers import WindowController
 from kivy.core.text import LabelBase
 from logging import config, getLogger
 
+DEBUG = False
 
 Window.minimum_height = 500
 Window.minimum_width = 400
@@ -53,7 +54,8 @@ from kivy.config import Config
 
 Config.set('kivy', 'window_icon', str(PATH_TO_ICON))
 
-
+if DEBUG:
+    Config.set('kivy', 'log_enable', 0)
 
 SERVER_URL = "http://127.0.0.1:8000"
 SERVER_URL = "http://193.124.115.112:7000"
@@ -65,4 +67,6 @@ Logging
 
 from kivy.logger import Logger, LOG_LEVELS
 
-Logger.setLevel(LOG_LEVELS["debug"])
+if DEBUG:
+    Logger.setLevel(LOG_LEVELS["debug"])
+
