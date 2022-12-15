@@ -32,7 +32,7 @@ class KDHSMessengerApp(MDApp, Data, Settings):
         self.controller = Controller()
         self.Logger = Logger
         self.notifier = Notifier()
-        self.Logger.info("starting")
+        self.Logger.info("Initialized KDHS App")
         super().__init__(**kwargs)
     
     def build(self):

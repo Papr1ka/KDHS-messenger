@@ -161,6 +161,7 @@ class Client(GetApp):
         else:
             r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
+            Logger.debug(f"{name}: Сontacts received")
             return r.json()
         elif r.status_code == 204:
             raise ServerError(f'Server exception 204: {r.text}')
@@ -171,7 +172,7 @@ class Client(GetApp):
     def disconnect(self):
         self.app.reactor_running = False
         reactor.disconnectAll()
-        Logger.info(f"{name}: connection stopped")
+        Logger.debug(f"{name}: Websocket connection was terminated")
     
     
     def autorize(self, username: str, password: str) -> str:
@@ -192,19 +193,22 @@ class Client(GetApp):
             self.autorized = True
             self.__connect()
             self.headers = {'Authorization': f'Token {self.token}'}
+            Logger.info(f"{name}: The user logged in")
             return self.token
         raise AccessError(r.text)
     
     def __connect(self):
+        Logger.debug(f"{name}: Starting a websocket connection...")
         self.factory = AppWebsocketClientFactory(WS_URL + self.token, self.app)
         reactor.connectTCP(WS_SERVER_URL, PORT, self.factory)
-        Logger.info(f"{name}: connection ok")
+        Logger.debug(f"{name}: Websocket connection established")
 
     @requiredAuthorization
     def getMe(self) -> ExtendedUserModel:
         url = URL + 'user'
         r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
+            Logger.debug(f"{name}: Recieved user")
             return createSelfUser(r.json())
         elif r.status_code == 204:
             raise ServerError(f'Server exception 204: {r.text}')
@@ -218,6 +222,7 @@ class Client(GetApp):
         r = requests.get(url=url, headers=self.headers, data={'username': username})
         if r.status_code == 200:
             resp = r.json()
+            Logger.debug(f"{name}: Search users")
             return [createUser(i) for i in resp]
         elif r.status_code == 204:
             raise ServerError(f'Server exception 204: {r.text}')
@@ -237,6 +242,7 @@ class Client(GetApp):
             'avatar': (filename, open(path_to_avatar, 'rb').read(), 'image/jpeg'),
         }
         r = requests.put(url=url, headers=self.headers, files=data)
+        Logger.debug(f"{name}: Avatar has been changed")
         if r.status_code == 200:
             result = r.json()
             error = result.get("error", None)
@@ -257,6 +263,7 @@ class Client(GetApp):
             params['status'] = data['status']
         
         r = requests.put(url=url, headers=self.headers, data=params)
+        Logger.debug(f"{name}: User data has been changed")
         result = r.json()
         if r.status_code == 200:
             return result
@@ -274,6 +281,7 @@ class Client(GetApp):
         url = URL + 'userList'
         r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
+            Logger.debug(f"{name}: Recieved users")
             return r.json()
         elif r.status_code == 204:
             raise ServerError(f'Server exception 204: {r.text}')
@@ -283,7 +291,6 @@ class Client(GetApp):
     
     @requiredAuthorization
     def getmessagelist(self, chat_id: str, part: str) -> list[MessageModel]:
-        print("request")
         if not isinstance(chat_id, str):
             raise ValueError("Expected chat_id:str")
         if not isinstance(part, str):
@@ -297,6 +304,7 @@ class Client(GetApp):
         }
         
         r = requests.get(url=url, headers=self.headers, json=data)
+        Logger.debug(f"{name}: Recieved messages")
         if r.status_code == 200:
             result = r.json()
             error = result.get("error", None)
@@ -325,6 +333,7 @@ class Client(GetApp):
             error = result.get("error", None)
             if error:
                 raise ValueError(error)
+            Logger.debug(f"{name}: Sended message")
             return createMessage(result)
         raise AccessError(r.text)
 
@@ -337,7 +346,6 @@ class Client(GetApp):
         data = {
             'users': [user_id],
         }
-        print(data)
         
         r = requests.post(url=url, headers=self.headers, data=data)
         if r.status_code == 200:
@@ -345,6 +353,7 @@ class Client(GetApp):
             error = result.get("error", None)
             if error:
                 raise ValueError(error)
+            Logger.debug(f"{name}: Chat created")
             return createChatAPI(result)
         raise AccessError(r.text)
 
@@ -356,6 +365,7 @@ class Client(GetApp):
         url = URL + 'user/' + user_id + "/"
         r = requests.get(url=url, headers=self.headers)
         if r.status_code == 200:
+            Logger.debug(f"{name}: Recieved self user data")
             return createUser(r.json())
         elif r.status_code == 401:
             raise AccessError(r.text)
@@ -377,6 +387,7 @@ class Client(GetApp):
         }
         r = requests.post(url=url, json=data)
         if r.status_code == 201:
+            Logger.debug(f"{name}: User has been registered")
             return self.autorize(username=username, password=password)
         elif r.status_code == 400:
             js = r.json()

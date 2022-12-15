@@ -3,6 +3,10 @@ from os.path import exists
 from pathlib import Path
 from dataclasses import dataclass
 
+from settings import Logger
+
+name = __name__
+
 @dataclass
 class Params:
     font_size: str
@@ -11,17 +15,17 @@ class Params:
 class Settings():
     def __init__(self) -> None:
         if exists(Path('settings.pickle')):
-            print("файл найдун")
+            Logger.debug(f"{name}: Settings file was found")
             with open(Path('settings.pickle'), 'rb') as settings:
                 data = pickle.load(settings)
-            print("файл загружен")
+            Logger.debug(f"{name}: Settings file was loaded")
             self._font_size = data.font_size
             self._notifications = data.notifications
-            print("что мы получили", data.font_size, data.notifications)
+            Logger.debug(f"{name}: Settings file: font:{data.font_size}, notifications:{data.notifications}")
         else:
             self._font_size = 18
             self._notifications = True
-            print("что-то не так")
+            Logger.debug(f"{name}: Settings file not found")
 
     @property
     def font_size(self):

@@ -70,7 +70,7 @@ class Data():
     reactor_running = False
 
     def on_login(self):
-        print("on_login")
+        Logger.debug(f"{name}: on_login")
         self.self_user = self.get_self_user()
         self.current_username = self.self_user.username
         self.current_avatar_url = self.self_user.avatar_image
@@ -103,7 +103,7 @@ class Data():
         return True
 
     def on_sign_out(self):
-        print("on_sign_out")
+        Logger.debug(f"{name}: on_sign_out")
         self.self_user = None
         self.contacts = []
         self.contacts_loaded = False
@@ -129,6 +129,7 @@ class Data():
         """
         начинает цикл переподключения
         """
+        Logger.debug(f"{name}: Start trying to reconnect...")
         if self.reactor_running:
             self.controller.show(partial(show_error_snackbar, "Сервер разорвал соединение, попытка переподключения"), 2)
             Clock.schedule_once(partial(self._reconnect, 10))
@@ -136,12 +137,13 @@ class Data():
     def _reconnect(self, timeout, dt):
         ok = self.login(*self.auth_data)
         if not ok:
-            Logger.error(f"{name}: can't send")
+            Logger.error(f"{name}: Reconnect attempt failed, next after {timeout} seconds")
             Clock.schedule_once(partial(self._reconnect, timeout * 2), timeout * 2)
         else:
-            self.controller.show(partial(show_success_snackbar, "Подключение восстановлено"), 2)
+            self.controller.show(partial(show_success_snackbar, "Reconnection attempt succeeded"), 2)
     
     def search_contacts(self, username: str):
+        Logger.debug(f"{name}: on_search_contacts")
         try:
             users: list[UserModel] = self.client.searchUsers(username)
         except BaseExceptions:
@@ -157,8 +159,6 @@ class Data():
                         exists = True
                         break
                 if not exists:
-                    print("сейчас будет search_contacts print")
-                    print(user, self.self_user)
                     if user.id != self.self_user.id:
                         viewset.append(asdict(createContact(user)))
             
@@ -170,11 +170,9 @@ class Data():
         Показывает контакты
         Заменяет данные из display_viewset на данные из contacts_viewset
         """
-        print("on_show_contacts")
+        Logger.debug(f"{name}: on_show_contacts")
         self.display_viewset.clear()
         self.display_viewset = self.contacts_viewset
-        print("контакты")
-        print(self.contacts_viewset)
     
     def create_chat(self, user_id: int):
         try:
@@ -237,21 +235,18 @@ class Data():
         """
         Получает список сообщений для чата с id - chat_id, если история сообщений существует, загружает с неё, если нет - с сервера
         """
-        print("вызвали метод")
-        print(self.chats)
         if chat_id == '':
             return
         story_exists = (self.chats.get(chat_id) is not None)
-
+        Logger.debug(f"{name}: on_get_messages, history={story_exists}, mode={mode}, part={part}")
         if not story_exists:
-            print("истории не существует")
             try:
                 messages = self.client.getmessagelist(chat_id, "1")
             except BaseExceptions:
                 self.controller.show(partial(show_error_snackbar, "Сервер не отвечает, попробуйте позже"), 2)
             else:
                 if len(messages) == 0:
-                    print("сообщений нет, создаём историю")
+                    Logger.debug(f"{name}: created empty history")
                     self.chats[chat_id] = []
                 else:
                     for message in messages:
@@ -259,13 +254,10 @@ class Data():
                 self.chats_parts[chat_id] = 1
             
         else:
-            print("история существует")
             if mode == True:
-                print("режим включен")
                 if self.check():
                     part = self.chats_parts.get(chat_id)
                     if part:
-                        print(part)
                         if part != -1:
                             part += 1
                             try:
@@ -280,9 +272,7 @@ class Data():
                                         self.add_message(message.text, from_me=False if str(self.get_self_user().id) != message.author_id else True, mode='start')
                                     self.chats_parts[chat_id] = part
             else:
-                print("режим выключен", self.chats[chat_id])
                 self.messages = self.chats[chat_id]
-        print(self.chats)
 
     def check(self):
         if (self.last_chat_id == self.selected_chat_id):
@@ -309,7 +299,7 @@ class Data():
         """
         Меняет название для выбранного чата, id выбранного чата, загружает список сообщений для выбранного чата
         """
-        print("on_chat_switch")
+        Logger.debug(f"{name}: on_chat_switch")
         self.last_chat_id = self.selected_chat_id
         self.selected_chat_id = chat_id
         self.current_destination_username = self.find_contact_by_chat_id(chat_id).destination_username
@@ -348,7 +338,6 @@ class Data():
         """
         Добавляет данные для отображения сообщения в конкретный чат
         """
-        print("on_story_message_start", self.chats)
         current_chat_id = chat_id if chat_id is not None else self.selected_chat_id
         if current_chat_id != '':
             story_exists = self.chats.get(current_chat_id, None)
@@ -369,7 +358,6 @@ class Data():
                     self.chats[current_chat_id].append(data)
                 else:
                     self.chats[current_chat_id].insert(0, data)
-        print("on_story_message_end", self.chats)
 
     def send_message(self, message: str):
         """
@@ -405,7 +393,7 @@ class Data():
         """
         Получает входящие сообщения в лайв режиме
         """
-        print("on_message", message, self.chats)
+        Logger.debug(f"{name}: on_message")
         if message.author_id != str(self.self_user.id):
             if str(message.chat_id) == self.selected_chat_id:
                 self.add_message(message.text, from_me=False)
@@ -425,15 +413,11 @@ class Data():
         if data.get('data'):
             data = data['data']
         
-        print(data, self.contacts)
-        
         if data['chats']:
             new_chat_length = len(data['chats'])
             old_chat_length = len(user.chats)
             if new_chat_length > old_chat_length:
                 for i in range(new_chat_length - 1, old_chat_length - 1, -1):
-                    print("туда запишут")
-                    print(data['chats'][i]['id'], type(data['chats'][i]['id']))
                     self.self_user.chats.append(data['chats'][i]['id'])
                 self.post_load_contacts(new_chat_length - old_chat_length)
                 self.show_contacts()

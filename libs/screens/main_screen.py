@@ -21,6 +21,9 @@ from libs.utils.behaviors import GetApp
 from libs.models import *
 from threading import Thread
 
+from settings import Logger
+
+name = __name__
 
 class Bar(MDTopAppBar, GetApp):
     pass
@@ -39,7 +42,7 @@ class ChatItem(ChatListItem):
         except AttributeError as E:
             self.app.create_chat(self.id)
             
-            print("вызвал функцию, отработала")
+            Logger.debug(f"{name}: on_open_messages")
 
 
 class ContentNavigationDrawer(MDBoxLayout):
@@ -92,19 +95,6 @@ class SidebarNavigation(MDNavigationDrawer, MainContactEventBehavior):
             width_offset=0,
         )
         dialog.open()
-    
-    def find_user(self, *args):
-        if self.dialog_chat:
-            username = self.dialog_chat.content_cls.ids.username.text
-            try:
-                user = self.app.client.searchUsers(username)
-            except ServerError:
-                pass
-            else:
-                print("нашёл")
-                print(user)
-        else:
-            print("что?")
 
 class MainMobileView(MDScreen, MainContactEventBehavior):
     def on_enter(self):
@@ -139,9 +129,6 @@ class MessagesBehavior(GetApp):
         super().__init__(**kw)
         Clock.schedule_once(self.bind_components, 1)
     
-    def test(self, *args):
-        print(args)
-    
     def bind_components(self, x):
         self.messages = self.app.messages
         self.ids.text_input.textinput.bind(
@@ -171,7 +158,7 @@ class MessagesBehavior(GetApp):
         Clock.schedule_once(self._refresh, 0)
     
     def _refresh(self, interval):
-        print("ща обновлю")
+        Logger.debug(f"{name}: on_messages_refresh")
         self.app.get_messages(self.app.selected_chat_id, mode=True)
         self.refreshing = False
     
@@ -179,8 +166,6 @@ class MessagesBehavior(GetApp):
         chat = self.app.find_contact_by_chat_id(self.app.selected_chat_id)
         user: Union[UserModel, None] = self.app.get_user(chat.users[-1])
         if user:
-            print(user)
-        
             popup = ProfilePopup(
                 avatar_url=user.avatar_image,
                 display_name=user.display_name,
