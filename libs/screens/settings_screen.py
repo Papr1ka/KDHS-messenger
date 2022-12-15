@@ -18,6 +18,7 @@ class MyToggleButton(MDFlatButton, MDToggleButton):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
 class SettingsScreenBase(MDRelativeLayout):
     pass
 
@@ -96,21 +97,6 @@ class SettingsBehavior(GetApp):
         self.ids.base.ids.display_name.bind(
             on_text_validate=self.change_display_name
         )
-        # self.ids.base.ids.font_size.bind(
-        #     on_text_validate=self.change_font_size
-        # )
-
-
-class SettingsMobileView(MDScreen, SettingsBehavior):
-    pass
-
-
-class SettingsTabletView(MDScreen, SettingsBehavior):
-    pass
-
-
-class SettingsDesktopView(MDScreen, SettingsBehavior):
-    pass
 
 
 class SettingsToolbar(MDTopAppBar, GetApp):
@@ -119,9 +105,7 @@ class SettingsToolbar(MDTopAppBar, GetApp):
         self.left_action_items = [["arrow-left", lambda x: self.app.screen_manager.switch_screen('main_screen')]]
 
 
-class SettingsScreen(MDResponsiveLayout, MDScreen):
+class SettingsScreen(MDScreen, SettingsBehavior):
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.mobile_view = SettingsMobileView()
-        self.tablet_view = SettingsTabletView()
-        self.desktop_view = SettingsDesktopView()
+

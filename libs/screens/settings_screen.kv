@@ -4,8 +4,8 @@
 
 <SettingsScreen>:
     name: 'settings_screen'
-    Button:
-        text: 'работает'
+    SettingsScreenBase:
+        id: base
 
 <Field@MDTextField>:
     mode: "fill"
@@ -109,34 +109,5 @@
                         thumb_color_inactive: app.colors['SearchColor']
                         track_color_active: app.colors['AccentColor']
                         track_color_inactive: app.colors['AccentColor']
-                # MDLabel:
-                #     text: "Вид"
-                #     font_size: 14
-                #     font_name: "InterR"
-                # Field:
-                #     id: font_size
-                #     text: str(app.font_size)
-                #     hint_text: "Шрифт"
-                # MDBoxLayout:
-                #     padding: [dp(20), 0, dp(20), 0]
-                #     orientation: 'horizontal'
-                #     MDLabel:
-                #         text: "Тёмная тема"
-                #         font_size: 24
-                #         font_name: "InterM"
-                #     MDSwitch:
                 Widget:
                     height: dp(20)
-
-<SettingsMobileView>:
-    SettingsScreenBase:
-        id: base
-
-<SettingsTabletView>:
-    SettingsScreenBase:
-        id: base
-
-<SettingsDesktopView>:
-    SettingsScreenBase:
-        id: base
-
