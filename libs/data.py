@@ -238,7 +238,7 @@ class Data():
         if chat_id == '':
             return
         story_exists = (self.chats.get(chat_id) is not None)
-        Logger.debug(f"{name}: on_get_messages, history={story_exists}, mode={mode}, part={part}")
+        Logger.debug(f"{name}: on_get_messages, history={story_exists}, mode={mode}")
         if not story_exists:
             try:
                 messages = self.client.getmessagelist(chat_id, "1")
@@ -257,6 +257,7 @@ class Data():
             if mode == True:
                 if self.check():
                     part = self.chats_parts.get(chat_id)
+                    Logger.debug(f"{name}: on_get_messages, part={part}")
                     if part:
                         if part != -1:
                             part += 1
