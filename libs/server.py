@@ -402,5 +402,5 @@ class Client(GetApp):
             raise AccessError(r.text)
         raise AccessError(r.text)
     
-from twisted.python import log
-log.startLogging(sys.stdout)
+# from twisted.python import log
+# log.startLogging(sys.stdout)

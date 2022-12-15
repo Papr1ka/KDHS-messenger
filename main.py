@@ -1,24 +1,18 @@
 from __future__ import unicode_literals
-import asyncio
-import json
+from settings import Templates, BASE_DIR, Logger
 from kivymd.app import MDApp
 from kivy.lang.builder import Builder
 from kivy.utils import get_color_from_hex
 from kivy.properties import DictProperty
 from libs.server import Client
-from kivy.app import async_runTouchApp
 
-from settings import Templates, BASE_DIR, Logger
 from libs.screen_manager.screen_manager import RootScreenManager
 from libs.colors import colors
 from libs.data import Data
 from libs.snackcontroller import Controller
 from libs.settings import Settings
 from libs.notify import Notifier
-import kivymd.utils.asynckivy as ak
-from kivy.base import ExceptionHandler
-from logging import config, getLogger
-import sys
+
 
 
 class KDHSMessengerApp(MDApp, Data, Settings):

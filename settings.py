@@ -2,9 +2,9 @@ from pathlib import Path
 from kivy.core.window import Window
 from kivymd.uix.controllers import WindowController
 from kivy.core.text import LabelBase
-from logging import config, getLogger
 
 DEBUG = False
+
 
 Window.minimum_height = 500
 Window.minimum_width = 400
@@ -19,7 +19,11 @@ BASE_DIR = Path(__file__).resolve().parent
 SOURCE_DIR = BASE_DIR.joinpath('libs')
 PATH_TO_ICON = BASE_DIR.joinpath('assets/icons/app.ico')
 
+from kivy.config import Config
 
+Config.set('kivy', 'window_icon', str(PATH_TO_ICON))
+Config.set('kivy', 'log_enable', 0)
+Config.write()
 #paths to folders with .kv files
 
 Templates = [
@@ -50,10 +54,6 @@ def on_size(self, instance, size: list) -> None:
 
 WindowController.on_size = on_size
 
-from kivy.config import Config
-
-Config.set('kivy', 'window_icon', str(PATH_TO_ICON))
-
 
 SERVER_URL = "http://127.0.0.1:8000"
 SERVER_URL = "http://193.124.115.112:7000"
@@ -64,5 +64,3 @@ Logging
 """
 
 from kivy.logger import Logger, LOG_LEVELS
-
-Logger.setLevel(LOG_LEVELS['debug'])
